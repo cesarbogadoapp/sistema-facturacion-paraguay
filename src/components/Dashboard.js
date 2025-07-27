@@ -62,7 +62,7 @@ const Dashboard = () => {
       }
 
       // 2. Buscar o crear producto
-      let producto = await buscarProductePorNombre(datos.producto);
+      let producto = await buscarProductoPorNombre(datos.producto);
       let productoId;
       
       if (producto) {

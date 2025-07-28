@@ -7,8 +7,17 @@ import Productos from './components/Productos';
 import { ContenedorNotificaciones } from './components/Notificaciones';
 import { useNotificaciones } from './hooks/useNotificaciones';
 
-// Crear contexto para notificaciones
-export const NotificacionesContext = React.createContext();
+// Crear contexto para notificaciones con valor por defecto más específico
+export const NotificacionesContext = React.createContext({
+  notificaciones: [],
+  agregarNotificacion: () => {},
+  removerNotificacion: () => {},
+  limpiarNotificaciones: () => {},
+  exito: () => {},
+  error: () => {},
+  advertencia: () => {},
+  info: () => {}
+});
 
 function App() {
   const [seccionActiva, setSeccionActiva] = useState('dashboard');

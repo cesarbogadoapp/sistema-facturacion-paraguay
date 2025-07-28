@@ -27,19 +27,19 @@ export const useNotificaciones = () => {
   }, []);
 
   // Métodos de conveniencia
-  const exito = useCallback((titulo, mensaje, duracion) => {
+  const exito = useCallback((titulo, mensaje, duracion = 5000) => {
     return agregarNotificacion('exito', titulo, mensaje, duracion);
   }, [agregarNotificacion]);
 
-  const error = useCallback((titulo, mensaje, duracion) => {
+  const error = useCallback((titulo, mensaje, duracion = 5000) => {
     return agregarNotificacion('error', titulo, mensaje, duracion);
   }, [agregarNotificacion]);
 
-  const advertencia = useCallback((titulo, mensaje, duracion) => {
+  const advertencia = useCallback((titulo, mensaje, duracion = 5000) => {
     return agregarNotificacion('advertencia', titulo, mensaje, duracion);
   }, [agregarNotificacion]);
 
-  const info = useCallback((titulo, mensaje, duracion) => {
+  const info = useCallback((titulo, mensaje, duracion = 5000) => {
     return agregarNotificacion('info', titulo, mensaje, duracion);
   }, [agregarNotificacion]);
 
@@ -59,7 +59,17 @@ export const useNotificaciones = () => {
 export const useNotificacionesContext = () => {
   const context = useContext(NotificacionesContext);
   if (!context) {
-    throw new Error('useNotificacionesContext debe usarse dentro de NotificacionesContext.Provider');
+    // Devolver un objeto con funciones vacías para evitar errores
+    return {
+      notificaciones: [],
+      agregarNotificacion: () => {},
+      removerNotificacion: () => {},
+      limpiarNotificaciones: () => {},
+      exito: () => {},
+      error: () => {},
+      advertencia: () => {},
+      info: () => {}
+    };
   }
   return context;
 };

@@ -89,14 +89,11 @@ const Dashboard = () => {
       await cargarSolicitudes();
       
       setMostrarFormulario(false);
-       notificaciones.exito(
-        'Solicitud Creada',
-        'La solicitud se ha guardado correctamente en el sistema'
-      );
+       notificaciones.exito('Factura Emitida', 'La factura ha sido emitida y registrada correctamente');
       
     } catch (error) {
       console.error('Error guardando solicitud:', error);
-      alert('Error al guardar la solicitud: ' + error.message);
+      notificaciones.error('Error al Emitir', 'No se pudo emitir la factura: ' + error.message);
     } finally {
       setCargando(false);
     }

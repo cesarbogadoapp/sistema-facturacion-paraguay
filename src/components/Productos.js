@@ -57,16 +57,16 @@ const Productos = () => {
     cargarProductos();
   }, []);
 
-  const cargarProductos = async () => {
+const cargarProductos = async () => {
   try {
     setCargando(true);
     const solicitudes = await obtenerSolicitudes();
     
-    // Extraer productos únicos de las solicitudes y calcular estadísticas
+    // Extraer productos únicos - VERSIÓN SIMPLE
     const productosMap = new Map();
     
     solicitudes.forEach(solicitud => {
-      if (solicitud.producto && solicitud.producto.nombre) {
+      if (solicitud.producto?.nombre) {
         const nombreProducto = solicitud.producto.nombre;
         
         if (!productosMap.has(nombreProducto)) {
@@ -77,9 +77,7 @@ const Productos = () => {
             totalFacturado: 0,
             montoTotal: 0,
             pendientes: 0,
-            ultimaVenta: null,
-            puedeEditar: true, // NUEVO: Agregar flag de edición
-            puedeEliminar: true // NUEVO: Agregar flag de eliminación
+            ultimaVenta: null
           });
         }
         
@@ -89,20 +87,15 @@ const Productos = () => {
         if (solicitud.estado === 'emitida') {
           producto.totalFacturado++;
           producto.montoTotal += solicitud.monto;
-          producto.puedeEditar = false; // No se puede editar si tiene facturas emitidas
-          producto.puedeEliminar = false; // No se puede eliminar si tiene facturas emitidas
           if (!producto.ultimaVenta || solicitud.fechaEmision > producto.ultimaVenta) {
             producto.ultimaVenta = solicitud.fechaEmision;
           }
         } else if (solicitud.estado === 'pendiente') {
           producto.pendientes++;
-          producto.puedeEliminar = false; // No se puede eliminar si tiene pendientes
-          // Pero sí se puede editar
         }
       }
     });
     
-    // Convertir a array y ordenar por total facturado
     const productosArray = Array.from(productosMap.values());
     productosArray.sort((a, b) => b.totalFacturado - a.totalFacturado);
     
@@ -440,49 +433,34 @@ const Productos = () => {
                   </>
                 ) : (
                   <>
-                    {producto.puedeEditar && (
-                      <button
-                        onClick={() => iniciarEdicion(producto)}
-                        style={{
-                          padding: '0.5rem',
-                          backgroundColor: '#f3f4f6',
-                          color: '#374151',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer'
-                        }}
-                        title="Editar producto"
-                      >
-                        <IconoEditar />
-                      </button>
-                    )}
-                    {producto.puedeEliminar && (
-                      <button
-                        onClick={() => confirmarEliminacion(producto)}
-                        style={{
-                          padding: '0.5rem',
-                          backgroundColor: '#fee2e2',
-                          color: '#dc2626',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer'
-                        }}
-                        title="Eliminar producto"
-                      >
-                        <IconoEliminar />
-                      </button>
-                    )}
-                    {!producto.puedeEditar && !producto.puedeEliminar && (
-                      <div style={{
+                    <button
+                      onClick={() => iniciarEdicion(producto)}
+                      style={{
                         padding: '0.5rem',
                         backgroundColor: '#f3f4f6',
-                        color: '#6b7280',
+                        color: '#374151',
+                        border: 'none',
                         borderRadius: '6px',
-                        fontSize: '0.75rem'
-                      }}>
-                        En uso
-                      </div>
-                    )}
+                        cursor: 'pointer'
+                      }}
+                      title="Editar producto"
+                    >
+                      <IconoEditar />
+                    </button>
+                    <button
+                      onClick={() => confirmarEliminacion(producto)}
+                      style={{
+                        padding: '0.5rem',
+                        backgroundColor: '#fee2e2',
+                        color: '#dc2626',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                      title="Eliminar producto"
+                    >
+                      <IconoEliminar />
+                    </button>
                   </>
                 )}
               </div>

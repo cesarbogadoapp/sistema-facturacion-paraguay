@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { obtenerSolicitudes } from '../services/database';
 
 // Iconos SVG profesionales
 const IconoCerrar = () => (
@@ -60,6 +61,40 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
 
   const [errores, setErrores] = useState({});
   const [campoEnfocado, setCampoEnfocado] = useState('');
+  const [productos, setProductos] = useState([]);
+  const [mostrandoNuevoProducto, setMostrandoNuevoProducto] = useState(false);
+  const [cargandoProductos, setCargandoProductos] = useState(true);
+
+  useEffect(() => {
+    cargarProductos();
+  }, []);
+
+  const cargarProductos = async () => {
+    try {
+      setCargandoProductos(true);
+      const solicitudes = await obtenerSolicitudes();
+      
+      // Extraer productos únicos
+      const productosUnicos = [];
+      const nombresVistos = new Set();
+      
+      solicitudes.forEach(solicitud => {
+        if (solicitud.producto && solicitud.producto.nombre && !nombresVistos.has(solicitud.producto.nombre)) {
+          nombresVistos.add(solicitud.producto.nombre);
+          productosUnicos.push({
+            id: solicitud.productoId,
+            nombre: solicitud.producto.nombre
+          });
+        }
+      });
+      
+      setProductos(productosUnicos);
+    } catch (error) {
+      console.error('Error cargando productos:', error);
+    } finally {
+      setCargandoProductos(false);
+    }
+  };
 
   const manejarCambio = (campo, valor) => {
     setDatos(prev => ({
@@ -168,53 +203,27 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
             <Icono />
           </div>
           
-          {type === 'textarea' ? (
-            <textarea
-              name={name}
-              value={value}
-              onChange={(e) => manejarCambio(name, e.target.value)}
-              onFocus={() => setCampoEnfocado(name)}
-              onBlur={() => setCampoEnfocado('')}
-              placeholder={placeholder}
-              rows={3}
-              style={{
-                width: '100%',
-                paddingLeft: '44px',
-                paddingRight: '12px',
-                paddingTop: '12px',
-                paddingBottom: '12px',
-                border: `2px solid ${tieneError ? '#ef4444' : estaEnfocado ? '#3b82f6' : '#e5e7eb'}`,
-                borderRadius: '12px',
-                fontSize: '0.95rem',
-                transition: 'all 0.2s ease',
-                backgroundColor: estaEnfocado ? '#f8fafc' : 'white',
-                resize: 'vertical',
-                fontFamily: 'inherit'
-              }}
-            />
-          ) : (
-            <input
-              type={type}
-              name={name}
-              value={value}
-              onChange={(e) => manejarCambio(name, e.target.value)}
-              onFocus={() => setCampoEnfocado(name)}
-              onBlur={() => setCampoEnfocado('')}
-              placeholder={placeholder}
-              style={{
-                width: '100%',
-                paddingLeft: '44px',
-                paddingRight: '12px',
-                paddingTop: '12px',
-                paddingBottom: '12px',
-                border: `2px solid ${tieneError ? '#ef4444' : estaEnfocado ? '#3b82f6' : '#e5e7eb'}`,
-                borderRadius: '12px',
-                fontSize: '0.95rem',
-                transition: 'all 0.2s ease',
-                backgroundColor: estaEnfocado ? '#f8fafc' : 'white'
-              }}
-            />
-          )}
+          <input
+            type={type}
+            name={name}
+            value={value}
+            onChange={(e) => manejarCambio(name, e.target.value)}
+            onFocus={() => setCampoEnfocado(name)}
+            onBlur={() => setCampoEnfocado('')}
+            placeholder={placeholder}
+            style={{
+              width: '100%',
+              paddingLeft: '44px',
+              paddingRight: '12px',
+              paddingTop: '12px',
+              paddingBottom: '12px',
+              border: `2px solid ${tieneError ? '#ef4444' : estaEnfocado ? '#3b82f6' : '#e5e7eb'}`,
+              borderRadius: '12px',
+              fontSize: '0.95rem',
+              transition: 'all 0.2s ease',
+              backgroundColor: estaEnfocado ? '#f8fafc' : 'white'
+            }}
+          />
         </div>
         
         {error && (
@@ -349,15 +358,152 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
               required
             />
 
-            <CampoFormulario
-              icono={IconoProducto}
-              label="Producto"
-              name="producto"
-              placeholder="Nombre del producto"
-              value={datos.producto}
-              error={errores.producto}
-              required
-            />
+            {/* Campo Producto con Dropdown */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '0.5rem', 
+                fontWeight: '600',
+                fontSize: '0.875rem',
+                color: '#374151'
+              }}>
+                Producto <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              
+              <div style={{ position: 'relative' }}>
+                <div style={{
+                  position: 'absolute',
+                  left: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: errores.producto ? '#ef4444' : campoEnfocado === 'producto' ? '#3b82f6' : '#9ca3af',
+                  transition: 'color 0.2s ease',
+                  zIndex: 1
+                }}>
+                  <IconoProducto />
+                </div>
+                
+                {mostrandoNuevoProducto ? (
+                  <div>
+                    <input
+                      type="text"
+                      value={datos.producto}
+                      onChange={(e) => manejarCambio('producto', e.target.value)}
+                      onFocus={() => setCampoEnfocado('producto')}
+                      onBlur={() => setCampoEnfocado('')}
+                      placeholder="Nombre del nuevo producto"
+                      style={{
+                        width: '100%',
+                        paddingLeft: '44px',
+                        paddingRight: '12px',
+                        paddingTop: '12px',
+                        paddingBottom: '12px',
+                        border: `2px solid ${errores.producto ? '#ef4444' : campoEnfocado === 'producto' ? '#3b82f6' : '#e5e7eb'}`,
+                        borderRadius: '12px',
+                        fontSize: '0.95rem',
+                        transition: 'all 0.2s ease',
+                        backgroundColor: campoEnfocado === 'producto' ? '#f8fafc' : 'white'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMostrandoNuevoProducto(false);
+                        setDatos(prev => ({ ...prev, producto: '' }));
+                      }}
+                      style={{
+                        marginTop: '0.5rem',
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#f3f4f6',
+                        color: '#374151',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.8rem'
+                      }}
+                    >
+                      ← Volver a lista de productos
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <select
+                      value={datos.producto}
+                      onChange={(e) => {
+                        if (e.target.value === '__nuevo__') {
+                          setMostrandoNuevoProducto(true);
+                          setDatos(prev => ({ ...prev, producto: '' }));
+                        } else {
+                          manejarCambio('producto', e.target.value);
+                        }
+                      }}
+                      onFocus={() => setCampoEnfocado('producto')}
+                      onBlur={() => setCampoEnfocado('')}
+                      style={{
+                        width: '100%',
+                        paddingLeft: '44px',
+                        paddingRight: '12px',
+                        paddingTop: '12px',
+                        paddingBottom: '12px',
+                        border: `2px solid ${errores.producto ? '#ef4444' : campoEnfocado === 'producto' ? '#3b82f6' : '#e5e7eb'}`,
+                        borderRadius: '12px',
+                        fontSize: '0.95rem',
+                        transition: 'all 0.2s ease',
+                        backgroundColor: campoEnfocado === 'producto' ? '#f8fafc' : 'white',
+                        appearance: 'none',
+                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                        backgroundPosition: 'right 12px center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: '16px'
+                      }}
+                    >
+                      <option value="">
+                        {cargandoProductos ? 'Cargando productos...' : 'Seleccionar producto'}
+                      </option>
+                      {productos.map(producto => (
+                        <option key={producto.id} value={producto.nombre}>
+                          {producto.nombre}
+                        </option>
+                      ))}
+                      <option value="__nuevo__" style={{ borderTop: '1px solid #e5e7eb' }}>
+                        + Agregar nuevo producto
+                      </option>
+                    </select>
+                    
+                    {productos.length > 0 && (
+                      <div style={{ 
+                        marginTop: '0.5rem', 
+                        fontSize: '0.75rem', 
+                        color: '#6b7280',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M13,9H11V7H13M13,17H11V11H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                        </svg>
+                        {productos.length} productos disponibles
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {errores.producto && (
+                <div style={{
+                  marginTop: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: '#ef4444',
+                  fontSize: '0.8rem'
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '0.25rem' }}>
+                    <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z"/>
+                  </svg>
+                  {errores.producto}
+                </div>
+              )}
+            </div>
 
             <CampoFormulario
               icono={IconoDinero}

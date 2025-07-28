@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Header from './Header';
 import FormularioSolicitud from './FormularioSolicitud';
 import { 
   crearCliente, 
@@ -178,7 +179,11 @@ const Dashboard = () => {
   };
 
   return (
-    <div style={{ padding: '0 2rem' }}>
+      <div style={{ padding: '2rem', marginLeft: '280px', minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <Header 
+      titulo="Dashboard Principal" 
+      subtitulo="Vista general y estadísticas del sistema"
+    />
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 

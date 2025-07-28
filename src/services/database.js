@@ -3,7 +3,8 @@ import {
   addDoc, 
   getDocs, 
   doc, 
-  updateDoc, 
+  updateDoc,
+  deleteDoc,
   query, 
   orderBy,
   serverTimestamp,
@@ -150,6 +151,65 @@ export const cancelarSolicitud = async (solicitudId, comentario = '') => {
     console.log('Solicitud cancelada:', solicitudId);
   } catch (error) {
     console.error('Error cancelando solicitud:', error);
+    throw error;
+  }
+};
+
+// === EDITAR Y ELIMINAR PRODUCTOS ===
+export const actualizarProducto = async (productoId, nuevoNombre) => {
+  try {
+    const productoRef = doc(db, 'productos', productoId);
+    await updateDoc(productoRef, {
+      nombre: nuevoNombre,
+      fechaActualizacion: serverTimestamp()
+    });
+    console.log('Producto actualizado:', productoId);
+  } catch (error) {
+    console.error('Error actualizando producto:', error);
+    throw error;
+  }
+};
+
+export const eliminarProducto = async (productoId) => {
+  try {
+    // Verificar si el producto está siendo usado en solicitudes
+    const q = query(collection(db, 'solicitudes'), where('productoId', '==', productoId));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      throw new Error('No se puede eliminar el producto porque está siendo usado en solicitudes existentes');
+    }
+    
+    // Si no está siendo usado, eliminarlo
+    await deleteDoc(doc(db, 'productos', productoId));
+    console.log('Producto eliminado:', productoId);
+  } catch (error) {
+    console.error('Error eliminando producto:', error);
+    throw error;
+  }
+};
+
+// === EDITAR Y ELIMINAR SOLICITUDES ===
+export const actualizarSolicitud = async (solicitudId, datosActualizados) => {
+  try {
+    const solicitudRef = doc(db, 'solicitudes', solicitudId);
+    await updateDoc(solicitudRef, {
+      ...datosActualizados,
+      fechaActualizacion: serverTimestamp()
+    });
+    console.log('Solicitud actualizada:', solicitudId);
+  } catch (error) {
+    console.error('Error actualizando solicitud:', error);
+    throw error;
+  }
+};
+
+export const eliminarSolicitud = async (solicitudId) => {
+  try {
+    await deleteDoc(doc(db, 'solicitudes', solicitudId));
+    console.log('Solicitud eliminada:', solicitudId);
+  } catch (error) {
+    console.error('Error eliminando solicitud:', error);
     throw error;
   }
 };

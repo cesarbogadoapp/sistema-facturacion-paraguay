@@ -104,73 +104,120 @@ const Sidebar = ({ seccionActiva, onCambiarSeccion }) => {
           const esActivo = seccionActiva === seccion.id;
           
           return (
-            <button
+            <div
               key={seccion.id}
-              onClick={() => onCambiarSeccion(seccion.id)}
               style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '1rem 1.5rem',
-                backgroundColor: esActivo ? '#3b82f6' : 'transparent',
-                color: esActivo ? 'white' : '#cbd5e1',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                textAlign: 'left',
-                borderLeft: esActivo ? '4px solid #60a5fa' : '4px solid transparent',
-                position: 'relative'
-              }}
-              onMouseOver={(e) => {
-                if (!esActivo) {
-                  e.target.style.backgroundColor = '#334155';
-                  e.target.style.color = 'white';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!esActivo) {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#cbd5e1';
-                }
+                margin: '0 1rem 0.5rem 1rem',
+                borderRadius: '12px',
+                overflow: 'hidden'
               }}
             >
-              {esActivo && (
-                <div style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: '4px',
-                  background: 'linear-gradient(to bottom, #60a5fa, #3b82f6)',
-                }}></div>
-              )}
-              
-              <div style={{ 
-                marginRight: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                opacity: esActivo ? 1 : 0.8
-              }}>
-                <IconoComponente />
-              </div>
-              
-              <div>
+              <button
+                onClick={() => onCambiarSeccion(seccion.id)}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '1rem 1.25rem',
+                  backgroundColor: esActivo ? '#3b82f6' : 'transparent',
+                  color: esActivo ? 'white' : '#cbd5e1',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textAlign: 'left',
+                  borderRadius: '12px',
+                  position: 'relative',
+                  userSelect: 'none', // Evita selección de texto
+                  outline: 'none', // Quita el outline por defecto
+                  WebkitTapHighlightColor: 'transparent', // Quita highlight en móvil
+                  boxShadow: esActivo ? '0 4px 12px rgba(59, 130, 246, 0.4)' : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (!esActivo) {
+                    e.currentTarget.style.backgroundColor = '#334155';
+                    e.currentTarget.style.color = 'white';
+                    e.currentTarget.style.transform = 'translateX(4px)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!esActivo) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#cbd5e1';
+                    e.currentTarget.style.transform = 'translateX(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }
+                }}
+                onFocus={(e) => {
+                  if (!esActivo) {
+                    e.currentTarget.style.backgroundColor = '#334155';
+                    e.currentTarget.style.color = 'white';
+                  }
+                }}
+                onBlur={(e) => {
+                  if (!esActivo) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#cbd5e1';
+                  }
+                }}
+              >
+                {/* Indicador activo */}
+                {esActivo && (
+                  <div style={{
+                    position: 'absolute',
+                    left: '-1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '4px',
+                    height: '70%',
+                    background: 'linear-gradient(to bottom, #60a5fa, #3b82f6)',
+                    borderRadius: '0 4px 4px 0'
+                  }}></div>
+                )}
+                
                 <div style={{ 
-                  fontWeight: esActivo ? '600' : '500', 
-                  fontSize: '0.95rem',
-                  marginBottom: '0.125rem'
+                  marginRight: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '24px',
+                  height: '24px',
+                  opacity: esActivo ? 1 : 0.8
                 }}>
-                  {seccion.nombre}
+                  <IconoComponente />
                 </div>
-                <div style={{ 
-                  fontSize: '0.75rem', 
-                  opacity: 0.75,
-                  lineHeight: '1.2'
-                }}>
-                  {seccion.descripcion}
+                
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    fontWeight: esActivo ? '600' : '500', 
+                    fontSize: '0.95rem',
+                    marginBottom: '0.125rem',
+                    lineHeight: '1.2'
+                  }}>
+                    {seccion.nombre}
+                  </div>
+                  <div style={{ 
+                    fontSize: '0.75rem', 
+                    opacity: 0.75,
+                    lineHeight: '1.2'
+                  }}>
+                    {seccion.descripcion}
+                  </div>
                 </div>
-              </div>
-            </button>
+
+                {/* Flecha indicadora para elemento activo */}
+                {esActivo && (
+                  <div style={{
+                    marginLeft: '0.5rem',
+                    opacity: 0.8
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
+                    </svg>
+                  </div>
+                )}
+              </button>
+            </div>
           );
         })}
       </nav>

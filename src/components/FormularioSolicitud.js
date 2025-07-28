@@ -1,5 +1,54 @@
 import React, { useState } from 'react';
 
+// Iconos SVG profesionales
+const IconoCerrar = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+  </svg>
+);
+
+const IconoUsuario = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+  </svg>
+);
+
+const IconoEmpresa = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12,7V3H2V21H22V7H12M6,19H4V17H6V19M6,15H4V13H6V15M6,11H4V9H6V11M6,7H4V5H6V7M10,19H8V17H10V19M10,15H8V13H10V15M10,11H8V9H10V11M10,7H8V5H10V7M20,19H12V17H14V15H12V13H14V11H12V9H20V19M18,11H16V13H18V11M18,15H16V17H18V15Z"/>
+  </svg>
+);
+
+const IconoEmail = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/>
+  </svg>
+);
+
+const IconoProducto = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+  </svg>
+);
+
+const IconoDinero = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z"/>
+  </svg>
+);
+
+const IconoSpinner = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ animation: 'spin 1s linear infinite' }}>
+    <path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/>
+    <style>{`
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `}</style>
+  </svg>
+);
+
 const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
   const [datos, setDatos] = useState({
     ruc: '',
@@ -10,6 +59,7 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
   });
 
   const [errores, setErrores] = useState({});
+  const [campoEnfocado, setCampoEnfocado] = useState('');
 
   const manejarCambio = (campo, valor) => {
     setDatos(prev => ({
@@ -80,6 +130,111 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
     }
   };
 
+  const CampoFormulario = ({ 
+    icono: Icono, 
+    label, 
+    name, 
+    type = 'text', 
+    placeholder, 
+    error, 
+    value,
+    required = false
+  }) => {
+    const tieneError = !!error;
+    const estaEnfocado = campoEnfocado === name;
+    
+    return (
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ 
+          display: 'block', 
+          marginBottom: '0.5rem', 
+          fontWeight: '600',
+          fontSize: '0.875rem',
+          color: '#374151'
+        }}>
+          {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
+        </label>
+        
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            position: 'absolute',
+            left: '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: tieneError ? '#ef4444' : estaEnfocado ? '#3b82f6' : '#9ca3af',
+            transition: 'color 0.2s ease',
+            zIndex: 1
+          }}>
+            <Icono />
+          </div>
+          
+          {type === 'textarea' ? (
+            <textarea
+              name={name}
+              value={value}
+              onChange={(e) => manejarCambio(name, e.target.value)}
+              onFocus={() => setCampoEnfocado(name)}
+              onBlur={() => setCampoEnfocado('')}
+              placeholder={placeholder}
+              rows={3}
+              style={{
+                width: '100%',
+                paddingLeft: '44px',
+                paddingRight: '12px',
+                paddingTop: '12px',
+                paddingBottom: '12px',
+                border: `2px solid ${tieneError ? '#ef4444' : estaEnfocado ? '#3b82f6' : '#e5e7eb'}`,
+                borderRadius: '12px',
+                fontSize: '0.95rem',
+                transition: 'all 0.2s ease',
+                backgroundColor: estaEnfocado ? '#f8fafc' : 'white',
+                resize: 'vertical',
+                fontFamily: 'inherit'
+              }}
+            />
+          ) : (
+            <input
+              type={type}
+              name={name}
+              value={value}
+              onChange={(e) => manejarCambio(name, e.target.value)}
+              onFocus={() => setCampoEnfocado(name)}
+              onBlur={() => setCampoEnfocado('')}
+              placeholder={placeholder}
+              style={{
+                width: '100%',
+                paddingLeft: '44px',
+                paddingRight: '12px',
+                paddingTop: '12px',
+                paddingBottom: '12px',
+                border: `2px solid ${tieneError ? '#ef4444' : estaEnfocado ? '#3b82f6' : '#e5e7eb'}`,
+                borderRadius: '12px',
+                fontSize: '0.95rem',
+                transition: 'all 0.2s ease',
+                backgroundColor: estaEnfocado ? '#f8fafc' : 'white'
+              }}
+            />
+          )}
+        </div>
+        
+        {error && (
+          <div style={{
+            marginTop: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            color: '#ef4444',
+            fontSize: '0.8rem'
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '0.25rem' }}>
+              <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z"/>
+            </svg>
+            {error}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div style={{
       position: 'fixed',
@@ -87,207 +242,228 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: 'rgba(0,0,0,0.6)',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      zIndex: 1000
+      zIndex: 1000,
+      animation: 'fadeIn 0.2s ease-out'
     }}>
       <div style={{
         backgroundColor: 'white',
-        padding: '2rem',
-        borderRadius: '12px',
+        borderRadius: '20px',
         width: '90%',
         maxWidth: '500px',
         maxHeight: '90vh',
-        overflow: 'auto',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+        overflow: 'hidden',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        animation: 'slideUp 0.3s ease-out'
       }}>
+        {/* Header */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem'
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          padding: '2rem 2rem 1.5rem 2rem',
+          color: 'white',
+          position: 'relative'
         }}>
-          <h3 style={{ margin: 0, color: '#1f2937' }}>
-            📝 Nueva Solicitud de Factura
-          </h3>
           <button
             onClick={onCerrar}
+            disabled={cargando}
             style={{
-              backgroundColor: 'transparent',
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              backgroundColor: 'rgba(255,255,255,0.2)',
               border: 'none',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              color: '#6b7280'
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: cargando ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.2s ease',
+              color: 'white'
+            }}
+            onMouseOver={(e) => {
+              if (!cargando) {
+                e.target.style.backgroundColor = 'rgba(255,255,255,0.3)';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!cargando) {
+                e.target.style.backgroundColor = 'rgba(255,255,255,0.2)';
+              }
             }}
           >
-            ✕
+            <IconoCerrar />
           </button>
+          
+          <h3 style={{ 
+            margin: '0 0 0.5rem 0', 
+            fontSize: '1.5rem',
+            fontWeight: '700'
+          }}>
+            Nueva Solicitud de Factura
+          </h3>
+          <p style={{ 
+            margin: 0, 
+            opacity: 0.9,
+            fontSize: '0.95rem'
+          }}>
+            Complete los datos del cliente y producto
+          </p>
         </div>
 
-        <form onSubmit={manejarEnvio}>
-          {/* RUC */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              RUC *
-            </label>
-            <input
-              type="text"
+        {/* Formulario */}
+        <div style={{ padding: '2rem', maxHeight: '60vh', overflowY: 'auto' }}>
+          <form onSubmit={manejarEnvio}>
+            <CampoFormulario
+              icono={IconoEmpresa}
+              label="RUC"
+              name="ruc"
               placeholder="12345678-9"
               value={datos.ruc}
-              onChange={(e) => manejarCambio('ruc', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: errores.ruc ? '2px solid #dc2626' : '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '1rem'
-              }}
+              error={errores.ruc}
+              required
             />
-            {errores.ruc && (
-              <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
-                {errores.ruc}
-              </p>
-            )}
-          </div>
 
-          {/* Razón Social */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Razón Social *
-            </label>
-            <input
-              type="text"
+            <CampoFormulario
+              icono={IconoUsuario}
+              label="Razón Social"
+              name="razonSocial"
               placeholder="Nombre de la empresa"
               value={datos.razonSocial}
-              onChange={(e) => manejarCambio('razonSocial', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: errores.razonSocial ? '2px solid #dc2626' : '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '1rem'
-              }}
+              error={errores.razonSocial}
+              required
             />
-            {errores.razonSocial && (
-              <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
-                {errores.razonSocial}
-              </p>
-            )}
-          </div>
 
-          {/* Email */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Email *
-            </label>
-            <input
+            <CampoFormulario
+              icono={IconoEmail}
+              label="Email"
+              name="email"
               type="email"
               placeholder="cliente@empresa.com"
               value={datos.email}
-              onChange={(e) => manejarCambio('email', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: errores.email ? '2px solid #dc2626' : '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '1rem'
-              }}
+              error={errores.email}
+              required
             />
-            {errores.email && (
-              <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
-                {errores.email}
-              </p>
-            )}
-          </div>
 
-          {/* Producto */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Producto *
-            </label>
-            <input
-              type="text"
+            <CampoFormulario
+              icono={IconoProducto}
+              label="Producto"
+              name="producto"
               placeholder="Nombre del producto"
               value={datos.producto}
-              onChange={(e) => manejarCambio('producto', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: errores.producto ? '2px solid #dc2626' : '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '1rem'
-              }}
+              error={errores.producto}
+              required
             />
-            {errores.producto && (
-              <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
-                {errores.producto}
-              </p>
-            )}
-          </div>
 
-          {/* Monto */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Monto (Gs.) *
-            </label>
-            <input
+            <CampoFormulario
+              icono={IconoDinero}
+              label="Monto (Gs.)"
+              name="monto"
               type="number"
               placeholder="150000"
               value={datos.monto}
-              onChange={(e) => manejarCambio('monto', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: errores.monto ? '2px solid #dc2626' : '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '1rem'
-              }}
+              error={errores.monto}
+              required
             />
-            {errores.monto && (
-              <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
-                {errores.monto}
-              </p>
-            )}
-          </div>
+          </form>
+        </div>
 
-          {/* Botones */}
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={onCerrar}
-              disabled={cargando}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#f3f4f6',
-                color: '#374151',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: cargando ? 'not-allowed' : 'pointer',
-                fontSize: '1rem'
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={cargando}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: cargando ? '#9ca3af' : '#2563eb',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: cargando ? 'not-allowed' : 'pointer',
-                fontSize: '1rem'
-              }}
-            >
-              {cargando ? '⏳ Guardando en Firebase...' : '💾 Guardar'}
-            </button>
-          </div>
-        </form>
+        {/* Footer con botones */}
+        <div style={{
+          padding: '1.5rem 2rem 2rem 2rem',
+          backgroundColor: '#f9fafb',
+          borderTop: '1px solid #e5e7eb',
+          display: 'flex',
+          gap: '1rem',
+          justifyContent: 'flex-end'
+        }}>
+          <button
+            type="button"
+            onClick={onCerrar}
+            disabled={cargando}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: 'white',
+              color: '#374151',
+              border: '2px solid #e5e7eb',
+              borderRadius: '12px',
+              cursor: cargando ? 'not-allowed' : 'pointer',
+              fontSize: '0.95rem',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              opacity: cargando ? 0.6 : 1
+            }}
+            onMouseOver={(e) => {
+              if (!cargando) {
+                e.target.style.borderColor = '#d1d5db';
+                e.target.style.backgroundColor = '#f9fafb';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!cargando) {
+                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.backgroundColor = 'white';
+              }
+            }}
+          >
+            Cancelar
+          </button>
+          
+          <button
+            type="submit"
+            onClick={manejarEnvio}
+            disabled={cargando}
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: cargando 
+                ? '#9ca3af' 
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: cargando ? 'not-allowed' : 'pointer',
+              fontSize: '0.95rem',
+              fontWeight: '600',
+              transition: 'all 0.2s ease',
+              minWidth: '120px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+            onMouseOver={(e) => {
+              if (!cargando) {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 10px 25px rgba(102, 126, 234, 0.4)';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!cargando) {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = 'none';
+              }
+            }}
+          >
+            {cargando && <IconoSpinner />}
+            {cargando ? 'Guardando...' : 'Guardar Solicitud'}
+          </button>
+        </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(20px) scale(0.95); opacity: 0; }
+          to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };

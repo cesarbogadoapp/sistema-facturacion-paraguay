@@ -116,48 +116,49 @@ const Productos = () => {
 };
 
   const manejarCrearProducto = async (e) => {
-    e.preventDefault();
-    
-    if (!nuevoProducto.trim()) {
-      notificaciones.error('Campo Requerido', 'El nombre del producto es obligatorio');
-      return;
-    }
-
-    // Verificar si ya existe
-    const existe = productos.some(p => 
-      p.nombre.toLowerCase() === nuevoProducto.trim().toLowerCase()
-    );
-    
-    if (existe) {
-      notificaciones.error('Producto Duplicado', 'Ya existe un producto con ese nombre');
-      return;
-    }
-
-    try {
-    setGuardandoProducto(true);
-      const productoId = await crearProducto(nuevoProducto.trim());
+  e.preventDefault();
   
-     // Agregar al estado local con ID real de Firebase
-     setProductos(prev => [{
-     id: productoId, // ID real de Firebase
-     nombre: nuevoProducto.trim(),
-     totalSolicitudes: 0,
-     totalFacturado: 0,
-     montoTotal: 0,
-     pendientes: 0,
-     ultimaVenta: null
-     }, ...prev]);
+  if (!nuevoProducto.trim()) {
+    notificaciones.error('Campo Requerido', 'El nombre del producto es obligatorio');
+    return;
+  }
 
-      setNuevoProducto('');
-      setMostrarFormulario(false);
-      notificaciones.exito('Producto Creado', 'El producto se ha agregado correctamente');
-    } catch (error) {
-      console.error('Error creando producto:', error);
-      notificaciones.error('Error al Crear', 'No se pudo crear el producto: ' + error.message);
-    } finally {
-      setGuardandoProducto(false);
-    }
-  };
+  const existe = productos.some(p => 
+    p.nombre.toLowerCase() === nuevoProducto.trim().toLowerCase()
+  );
+  
+  if (existe) {
+    notificaciones.error('Producto Duplicado', 'Ya existe un producto con ese nombre');
+    return;
+  }
+
+  try {
+    setGuardandoProducto(true);
+    const productoId = await crearProducto(nuevoProducto.trim());
+    
+    // CORREGIDO: Agregar producto nuevo SIN uso
+    setProductos(prev => [{
+      id: productoId,
+      nombre: nuevoProducto.trim(),
+      totalSolicitudes: 0,
+      totalFacturado: 0,
+      montoTotal: 0,
+      pendientes: 0,
+      ultimaVenta: null,
+      puedeEditar: true,    // NUEVO producto SÍ se puede editar
+      puedeEliminar: true   // NUEVO producto SÍ se puede eliminar
+    }, ...prev]);
+
+    setNuevoProducto('');
+    setMostrarFormulario(false);
+    notificaciones.exito('Producto Creado', 'El producto se ha agregado correctamente');
+  } catch (error) {
+    console.error('Error creando producto:', error);
+    notificaciones.error('Error al Crear', 'No se pudo crear el producto: ' + error.message);
+  } finally {
+    setGuardandoProducto(false);
+  }
+};
 
   const iniciarEdicion = (producto) => {
     setProductoEditando(producto.id);

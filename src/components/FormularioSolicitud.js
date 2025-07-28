@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { obtenerSolicitudes } from '../services/database';
 
-// Iconos SVG profesionales
+// Iconos SVG profesionales (mantener los mismos)
 const IconoCerrar = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
     <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
@@ -51,6 +51,7 @@ const IconoSpinner = () => (
 );
 
 const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
+  // Estados del formulario - CORREGIDO
   const [datos, setDatos] = useState({
     ruc: '',
     razonSocial: '',
@@ -61,6 +62,8 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
 
   const [errores, setErrores] = useState({});
   const [campoEnfocado, setCampoEnfocado] = useState('');
+  
+  // Estados para productos
   const [productos, setProductos] = useState([]);
   const [mostrandoNuevoProducto, setMostrandoNuevoProducto] = useState(false);
   const [cargandoProductos, setCargandoProductos] = useState(true);
@@ -96,23 +99,23 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
     }
   };
 
+  // FUNCIÓN CORREGIDA para manejar cambios
   const manejarCambio = (campo, valor) => {
-    setDatos(prev => ({
-      ...prev,
+    setDatos(prevDatos => ({
+      ...prevDatos,
       [campo]: valor
     }));
     
     // Limpiar error cuando el usuario empiece a escribir
     if (errores[campo]) {
-      setErrores(prev => ({
-        ...prev,
+      setErrores(prevErrores => ({
+        ...prevErrores,
         [campo]: ''
       }));
     }
   };
 
   const validarRUC = (ruc) => {
-    // Validación básica del RUC paraguayo
     const rucLimpio = ruc.replace(/[-\s]/g, '');
     if (rucLimpio.length < 7 || rucLimpio.length > 8) {
       return false;
@@ -294,16 +297,6 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
               transition: 'background-color 0.2s ease',
               color: 'white'
             }}
-            onMouseOver={(e) => {
-              if (!cargando) {
-                e.target.style.backgroundColor = 'rgba(255,255,255,0.3)';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!cargando) {
-                e.target.style.backgroundColor = 'rgba(255,255,255,0.2)';
-              }
-            }}
           >
             <IconoCerrar />
           </button>
@@ -358,7 +351,7 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
               required
             />
 
-            {/* Campo Producto con Dropdown */}
+            {/* Campo Producto con Dropdown - SIMPLIFICADO */}
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ 
                 display: 'block', 
@@ -409,7 +402,7 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
                       type="button"
                       onClick={() => {
                         setMostrandoNuevoProducto(false);
-                        setDatos(prev => ({ ...prev, producto: '' }));
+                        manejarCambio('producto', '');
                       }}
                       style={{
                         marginTop: '0.5rem',
@@ -432,7 +425,7 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
                       onChange={(e) => {
                         if (e.target.value === '__nuevo__') {
                           setMostrandoNuevoProducto(true);
-                          setDatos(prev => ({ ...prev, producto: '' }));
+                          manejarCambio('producto', '');
                         } else {
                           manejarCambio('producto', e.target.value);
                         }
@@ -461,11 +454,11 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
                         {cargandoProductos ? 'Cargando productos...' : 'Seleccionar producto'}
                       </option>
                       {productos.map(producto => (
-                        <option key={producto.id} value={producto.nombre}>
+                        <option key={producto.id || producto.nombre} value={producto.nombre}>
                           {producto.nombre}
                         </option>
                       ))}
-                      <option value="__nuevo__" style={{ borderTop: '1px solid #e5e7eb' }}>
+                      <option value="__nuevo__">
                         + Agregar nuevo producto
                       </option>
                     </select>
@@ -474,14 +467,8 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
                       <div style={{ 
                         marginTop: '0.5rem', 
                         fontSize: '0.75rem', 
-                        color: '#6b7280',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem'
+                        color: '#6b7280'
                       }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M13,9H11V7H13M13,17H11V11H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
-                        </svg>
                         {productos.length} productos disponibles
                       </div>
                     )}
@@ -543,18 +530,6 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
               transition: 'all 0.2s ease',
               opacity: cargando ? 0.6 : 1
             }}
-            onMouseOver={(e) => {
-              if (!cargando) {
-                e.target.style.borderColor = '#d1d5db';
-                e.target.style.backgroundColor = '#f9fafb';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!cargando) {
-                e.target.style.borderColor = '#e5e7eb';
-                e.target.style.backgroundColor = 'white';
-              }
-            }}
           >
             Cancelar
           </button>
@@ -580,18 +555,6 @@ const FormularioSolicitud = ({ onCerrar, onGuardar, cargando = false }) => {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem'
-            }}
-            onMouseOver={(e) => {
-              if (!cargando) {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 10px 25px rgba(102, 126, 234, 0.4)';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!cargando) {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = 'none';
-              }
             }}
           >
             {cargando && <IconoSpinner />}

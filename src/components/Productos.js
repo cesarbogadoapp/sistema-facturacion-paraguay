@@ -58,56 +58,62 @@ const Productos = () => {
   }, []);
 
   const cargarProductos = async () => {
-    try {
-      setCargando(true);
-      const solicitudes = await obtenerSolicitudes();
-      
-      // Extraer productos únicos de las solicitudes y calcular estadísticas
-      const productosMap = new Map();
-      
-      solicitudes.forEach(solicitud => {
-        if (solicitud.producto && solicitud.producto.nombre) {
-          const nombreProducto = solicitud.producto.nombre;
-          
-          if (!productosMap.has(nombreProducto)) {
-            productosMap.set(nombreProducto, {
-              id: solicitud.productoId,
-              nombre: nombreProducto,
-              totalSolicitudes: 0,
-              totalFacturado: 0,
-              montoTotal: 0,
-              pendientes: 0,
-              ultimaVenta: null
-            });
-          }
-          
-          const producto = productosMap.get(nombreProducto);
-          producto.totalSolicitudes++;
-          
-          if (solicitud.estado === 'emitida') {
-            producto.totalFacturado++;
-            producto.montoTotal += solicitud.monto;
-            if (!producto.ultimaVenta || solicitud.fechaEmision > producto.ultimaVenta) {
-              producto.ultimaVenta = solicitud.fechaEmision;
-            }
-          } else if (solicitud.estado === 'pendiente') {
-            producto.pendientes++;
-          }
+  try {
+    setCargando(true);
+    const solicitudes = await obtenerSolicitudes();
+    
+    // Extraer productos únicos de las solicitudes y calcular estadísticas
+    const productosMap = new Map();
+    
+    solicitudes.forEach(solicitud => {
+      if (solicitud.producto && solicitud.producto.nombre) {
+        const nombreProducto = solicitud.producto.nombre;
+        
+        if (!productosMap.has(nombreProducto)) {
+          productosMap.set(nombreProducto, {
+            id: solicitud.productoId,
+            nombre: nombreProducto,
+            totalSolicitudes: 0,
+            totalFacturado: 0,
+            montoTotal: 0,
+            pendientes: 0,
+            ultimaVenta: null,
+            puedeEditar: true, // NUEVO: Agregar flag de edición
+            puedeEliminar: true // NUEVO: Agregar flag de eliminación
+          });
         }
-      });
-      
-      // Convertir a array y ordenar por total facturado
-      const productosArray = Array.from(productosMap.values());
-      productosArray.sort((a, b) => b.totalFacturado - a.totalFacturado);
-      
-      setProductos(productosArray);
-    } catch (error) {
-      console.error('Error cargando productos:', error);
-      notificaciones.error('Error de Carga', 'No se pudieron cargar los productos');
-    } finally {
-      setCargando(false);
-    }
-  };
+        
+        const producto = productosMap.get(nombreProducto);
+        producto.totalSolicitudes++;
+        
+        if (solicitud.estado === 'emitida') {
+          producto.totalFacturado++;
+          producto.montoTotal += solicitud.monto;
+          producto.puedeEditar = false; // No se puede editar si tiene facturas emitidas
+          producto.puedeEliminar = false; // No se puede eliminar si tiene facturas emitidas
+          if (!producto.ultimaVenta || solicitud.fechaEmision > producto.ultimaVenta) {
+            producto.ultimaVenta = solicitud.fechaEmision;
+          }
+        } else if (solicitud.estado === 'pendiente') {
+          producto.pendientes++;
+          producto.puedeEliminar = false; // No se puede eliminar si tiene pendientes
+          // Pero sí se puede editar
+        }
+      }
+    });
+    
+    // Convertir a array y ordenar por total facturado
+    const productosArray = Array.from(productosMap.values());
+    productosArray.sort((a, b) => b.totalFacturado - a.totalFacturado);
+    
+    setProductos(productosArray);
+  } catch (error) {
+    console.error('Error cargando productos:', error);
+    notificaciones.error('Error de Carga', 'No se pudieron cargar los productos');
+  } finally {
+    setCargando(false);
+  }
+};
 
   const manejarCrearProducto = async (e) => {
     e.preventDefault();
@@ -128,19 +134,19 @@ const Productos = () => {
     }
 
     try {
-      setGuardandoProducto(true);
-      await crearProducto(nuevoProducto.trim());
-      
-      // Agregar al estado local
-      setProductos(prev => [{
-        id: Date.now().toString(),
-        nombre: nuevoProducto.trim(),
-        totalSolicitudes: 0,
-        totalFacturado: 0,
-        montoTotal: 0,
-        pendientes: 0,
-        ultimaVenta: null
-      }, ...prev]);
+    setGuardandoProducto(true);
+      const productoId = await crearProducto(nuevoProducto.trim());
+  
+     // Agregar al estado local con ID real de Firebase
+     setProductos(prev => [{
+     id: productoId, // ID real de Firebase
+     nombre: nuevoProducto.trim(),
+     totalSolicitudes: 0,
+     totalFacturado: 0,
+     montoTotal: 0,
+     pendientes: 0,
+     ultimaVenta: null
+     }, ...prev]);
 
       setNuevoProducto('');
       setMostrarFormulario(false);
@@ -433,32 +439,49 @@ const Productos = () => {
                   </>
                 ) : (
                   <>
-                    <button
-                      onClick={() => iniciarEdicion(producto)}
-                      style={{
+                    {producto.puedeEditar && (
+                      <button
+                        onClick={() => iniciarEdicion(producto)}
+                        style={{
+                          padding: '0.5rem',
+                          backgroundColor: '#f3f4f6',
+                          color: '#374151',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer'
+                        }}
+                        title="Editar producto"
+                      >
+                        <IconoEditar />
+                      </button>
+                    )}
+                    {producto.puedeEliminar && (
+                      <button
+                        onClick={() => confirmarEliminacion(producto)}
+                        style={{
+                          padding: '0.5rem',
+                          backgroundColor: '#fee2e2',
+                          color: '#dc2626',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer'
+                        }}
+                        title="Eliminar producto"
+                      >
+                        <IconoEliminar />
+                      </button>
+                    )}
+                    {!producto.puedeEditar && !producto.puedeEliminar && (
+                      <div style={{
                         padding: '0.5rem',
                         backgroundColor: '#f3f4f6',
-                        color: '#374151',
-                        border: 'none',
+                        color: '#6b7280',
                         borderRadius: '6px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <IconoEditar />
-                    </button>
-                    <button
-                      onClick={() => confirmarEliminacion(producto)}
-                      style={{
-                        padding: '0.5rem',
-                        backgroundColor: '#fee2e2',
-                        color: '#dc2626',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <IconoEliminar />
-                    </button>
+                        fontSize: '0.75rem'
+                      }}>
+                        En uso
+                      </div>
+                    )}
                   </>
                 )}
               </div>

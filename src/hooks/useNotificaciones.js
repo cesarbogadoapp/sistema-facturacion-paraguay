@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useContext } from 'react';
+import { NotificacionesContext } from '../App';
 
 export const useNotificaciones = () => {
   const [notificaciones, setNotificaciones] = useState([]);
@@ -52,4 +53,13 @@ export const useNotificaciones = () => {
     advertencia,
     info
   };
+};
+
+// Hook para usar notificaciones en cualquier componente
+export const useNotificacionesContext = () => {
+  const context = useContext(NotificacionesContext);
+  if (!context) {
+    throw new Error('useNotificacionesContext debe usarse dentro de NotificacionesContext.Provider');
+  }
+  return context;
 };

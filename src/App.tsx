@@ -7,44 +7,47 @@ import Productos from './components/Productos';
 import { ContenedorNotificaciones } from './components/Notificaciones';
 import { useNotificaciones } from './hooks/useNotificaciones';
 
+// Crear contexto para notificaciones
+export const NotificacionesContext = React.createContext();
+
 function App() {
   const [seccionActiva, setSeccionActiva] = useState('dashboard');
   const notificaciones = useNotificaciones();
 
   const renderizarContenido = () => {
-    const props = { notificaciones };
-    
     switch (seccionActiva) {
       case 'dashboard':
-        return <Dashboard {...props} />;
+        return <Dashboard />;
       case 'solicitudes':
-        return <Solicitudes {...props} />;
+        return <Solicitudes />;
       case 'clientes':
-        return <Clientes {...props} />;
+        return <Clientes />;
       case 'productos':
-        return <Productos {...props} />;
+        return <Productos />;
       default:
-        return <Dashboard {...props} />;
+        return <Dashboard />;
     }
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f9fafb',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <Sidebar 
-        seccionActiva={seccionActiva}
-        onCambiarSeccion={setSeccionActiva}
-      />
-      {renderizarContenido()}
-      
-      <ContenedorNotificaciones
-        notificaciones={notificaciones.notificaciones}
-        onRemover={notificaciones.removerNotificacion}
-      />
-    </div>
+    <NotificacionesContext.Provider value={notificaciones}>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#f9fafb',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        <Sidebar 
+          seccionActiva={seccionActiva}
+          onCambiarSeccion={setSeccionActiva}
+        />
+        {renderizarContenido()}
+        
+        <ContenedorNotificaciones
+          notificaciones={notificaciones.notificaciones}
+          onRemover={notificaciones.removerNotificacion}
+        />
+      </div>
+    </NotificacionesContext.Provider>
   );
 }
 

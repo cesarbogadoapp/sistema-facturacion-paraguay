@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import FormularioSolicitud from './FormularioSolicitud';
+import { useNotificacionesContext } from '../hooks/useNotificaciones';
 import { 
   crearCliente, 
   crearProducto, 
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [cargandoSolicitudes, setCargandoSolicitudes] = useState(true);
   const [modalCancelacion, setModalCancelacion] = useState(null);
   const [comentarioCancelacion, setComentarioCancelacion] = useState('');
+  const notificaciones = useNotificacionesContext();
 
   // Cargar solicitudes al inicio
   useEffect(() => {
@@ -87,7 +89,10 @@ const Dashboard = () => {
       await cargarSolicitudes();
       
       setMostrarFormulario(false);
-      alert('¡Solicitud guardada exitosamente! 🎉');
+       notificaciones.exito(
+        'Solicitud Creada',
+        'La solicitud se ha guardado correctamente en el sistema'
+      );
       
     } catch (error) {
       console.error('Error guardando solicitud:', error);

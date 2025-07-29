@@ -46,9 +46,9 @@ const Dashboard: React.FC<DashboardProps> = ({ mostrarNotificacion, onCambiarVis
   const navegarA = (vista: 'solicitudes' | 'clientes' | 'productos') => {
     if (onCambiarVista) {
       onCambiarVista(vista);
-      mostrarNotificacion(`Navegando a ${vista}...`, 'info');
+      //mostrarNotificacion(`Navegando a ${vista}...`, 'info');
     } else {
-      mostrarNotificacion('Navegación no disponible', 'warning');
+      //mostrarNotificacion('Navegación no disponible', 'warning');
     }
   };
 

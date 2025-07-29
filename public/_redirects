@@ -1,0 +1,8 @@
+# Archivo: public/_redirects
+# Configuración para Netlify - Single Page Application
+
+/*    /index.html   200
+
+# Configuración adicional para Firebase
+/firebase-auth-link    /index.html   200
+/api/*    /index.html   200

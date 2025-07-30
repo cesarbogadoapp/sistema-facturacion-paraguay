@@ -458,7 +458,7 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
 
   // Filtros
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'pendiente' | 'emitida' | 'cancelada'>('todos');
-
+  const [filtroFecha, setFiltroFecha] = useState<'todas' | 'hoy' | 'ayer' | 'esta_semana' | 'este_mes' | 'mes_pasado'>('todas');
   // Cargar datos
   useEffect(() => {
     cargarDatos();
@@ -488,9 +488,51 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
 
   // Filtrar solicitudes
   const solicitudesFiltradas = solicitudes.filter(solicitud => {
-    if (filtroEstado === 'todos') return true;
-    return solicitud.estado === filtroEstado;
-  });
+  // Filtrar por estado
+  if (filtroEstado !== 'todos' && solicitud.estado !== filtroEstado) {
+    return false;
+  }
+
+  // Filtrar por fecha
+  if (filtroFecha !== 'todas') {
+    const ahora = new Date();
+    const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    const fechaSolicitud = solicitud.fechaSolicitud?.toDate ? 
+      solicitud.fechaSolicitud.toDate() : 
+      new Date(solicitud.fechaSolicitud);
+    
+    switch (filtroFecha) {
+      case 'hoy':
+        const inicioHoy = new Date(hoy);
+        const finHoy = new Date(hoy.getTime() + 24 * 60 * 60 * 1000);
+        return fechaSolicitud >= inicioHoy && fechaSolicitud < finHoy;
+        
+      case 'ayer':
+        const ayer = new Date(hoy.getTime() - 24 * 60 * 60 * 1000);
+        const finAyer = new Date(hoy);
+        return fechaSolicitud >= ayer && fechaSolicitud < finAyer;
+        
+      case 'esta_semana':
+        const inicioSemana = new Date(hoy);
+        inicioSemana.setDate(hoy.getDate() - hoy.getDay());
+        return fechaSolicitud >= inicioSemana;
+        
+      case 'este_mes':
+        const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+        return fechaSolicitud >= inicioMes;
+        
+      case 'mes_pasado':
+        const inicioMesPasado = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
+        const finMesPasado = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+        return fechaSolicitud >= inicioMesPasado && fechaSolicitud < finMesPasado;
+        
+      default:
+        return true;
+    }
+  }
+
+  return true;
+});
 
   // Manejar emisión de factura
   const manejarEmitirFactura = (solicitud: Solicitud) => {
@@ -715,7 +757,25 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
             <option value="cancelada">Canceladas</option>
           </select>
         </div>
-        
+
+      {/* NUEVO FILTRO POR FECHA */}
+      <div className="filtros-grupo">
+          <label htmlFor="filtroFecha">Filtrar por fecha:</label>
+          <select
+            id="filtroFecha"
+            value={filtroFecha}
+            onChange={(e) => setFiltroFecha(e.target.value as any)}
+            className="filtro-select"
+          >
+            <option value="todas">Todas las fechas</option>
+            <option value="hoy">Hoy</option>
+            <option value="ayer">Ayer</option>
+            <option value="esta_semana">Esta semana</option>
+            <option value="este_mes">Este mes</option>
+            <option value="mes_pasado">Mes pasado</option>
+          </select>
+        </div>
+  
         <div className="resumen-filtros">
           <span className="resumen-texto">
             Mostrando {solicitudesFiltradas.length} de {solicitudes.length} solicitudes
@@ -745,132 +805,150 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
             </span>
           </div>
         ) : (
-          <div className="solicitudes-grid">
-            {solicitudesFiltradas.map((solicitud) => (
-              <div key={solicitud.id} className="solicitud-card">
-                {/* Header de la card */}
-                <div className="solicitud-header">
-                  <div className="solicitud-info">
-                    <h4>Solicitud #{solicitud.id?.slice(-8).toUpperCase()}</h4>
-                    <div className={`estado-badge ${obtenerClaseEstado(solicitud.estado)}`}>
-                      {obtenerIconoEstado(solicitud.estado)}
-                      <span>{solicitud.estado.charAt(0).toUpperCase() + solicitud.estado.slice(1)}</span>
-                    </div>
-                  </div>
-                  <div className="solicitud-monto">
-                    {formatearMontoConSimbolo(solicitud.monto)}
-                  </div>
-                </div>
+         <div className="solicitudes-grid">
+  {solicitudesFiltradas.map((solicitud, index) => (
+    <div key={solicitud.id} className={`solicitud-card estado-${solicitud.estado}`}>
+      {/* CONTENIDO PRINCIPAL DE LA TARJETA */}
+      <div className="solicitud-contenido-completo">
+        {/* Número circular */}
+        <div className="solicitud-numero">
+          #{(index + 1).toString().padStart(2, '0')}
+        </div>
 
-                {/* Detalles del cliente */}
-                <div className="solicitud-cliente">
-                  <div className="cliente-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="cliente-nombre">{solicitud.cliente.razonSocial}</div>
-                    <div className="cliente-ruc">RUC: {solicitud.cliente.ruc}</div>
-                  </div>
-                </div>
+        {/* Contenido principal izquierdo */}
+        <div className="solicitud-contenido-principal">
+          {/* Información del cliente */}
+          <div className="solicitud-cliente-info">
+          <h4 className="cliente-nombre-principal">{solicitud.cliente.razonSocial}</h4>
+          <p className="cliente-ruc-secundario">RUC: {solicitud.cliente.ruc}</p>
+          <p className="cliente-email-secundario">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            {solicitud.cliente.email}
+          </p>
+        </div>
 
-                {/* Detalles del producto */}
-                <div className="solicitud-producto">
-                  <div className="producto-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                      <line x1="8" y1="21" x2="16" y2="21"/>
-                      <line x1="12" y1="17" x2="12" y2="21"/>
-                    </svg>
-                  </div>
-                  <span>{solicitud.producto.nombre}</span>
-                </div>
-
-                {/* Fechas */}
-                <div className="solicitud-fechas">
-                  <div className="fecha-item">
-                    <span className="fecha-label">Solicitado:</span>
-                    <span className="fecha-valor">
-                      {formatearFechaHora(solicitud.fechaSolicitud)}
-                    </span>
-                  </div>
-                  {solicitud.fechaEmision && (
-                    <div className="fecha-item">
-                      <span className="fecha-label">Emitido:</span>
-                      <span className="fecha-valor">
-                        {formatearFechaHora(solicitud.fechaEmision)}
-                      </span>
-                    </div>
-                  )}
-                  {solicitud.fechaCancelacion && (
-                    <div className="fecha-item">
-                      <span className="fecha-label">Cancelado:</span>
-                      <span className="fecha-valor">
-                        {formatearFechaHora(solicitud.fechaCancelacion)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Comentario de cancelación */}
-                {solicitud.estado === 'cancelada' && solicitud.comentarioCancelacion && (
-                  <div className="comentario-cancelacion">
-                    <span className="comentario-label">Motivo:</span>
-                    <span className="comentario-texto">{solicitud.comentarioCancelacion}</span>
-                  </div>
-                )}
-
-                {/* Acciones */}
-                {solicitud.estado === 'pendiente' && (
-                  <div className="solicitud-acciones">
-                    <button
-                      onClick={() => manejarEditarSolicitud(solicitud)}
-                      disabled={procesandoId === solicitud.id}
-                      className="btn-editar"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => manejarEmitirFactura(solicitud)}
-                      disabled={procesandoId === solicitud.id}
-                      className="btn-emitir"
-                    >
-                      {procesandoId === solicitud.id ? (
-                        <>
-                          <div className="spinner-small"></div>
-                          Emitiendo...
-                        </>
-                      ) : (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20,6 9,17 4,12"/>
-                          </svg>
-                          Emitir Factura
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => manejarCancelarSolicitud(solicitud)}
-                      disabled={procesandoId === solicitud.id}
-                      className="btn-cancelar"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                      </svg>
-                      Cancelar
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
+          {/* Información del producto */}
+          <div className="solicitud-producto-info">
+            <p className="producto-nombre">{solicitud.producto.nombre}</p>
+            <p className="producto-fecha">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12,6 12,12 16,14"/>
+              </svg>
+              {formatearFechaHora(solicitud.fechaSolicitud)}
+            </p>
           </div>
+        </div>
+
+        {/* Información derecha reorganizada */}
+        <div className="solicitud-info-derecha">
+          {/* Fila superior: Estado y Monto */}
+          <div className="solicitud-fila-superior">
+            <div className="solicitud-estado-badge">
+              <div className={`estado-badge ${obtenerClaseEstado(solicitud.estado)}`}>
+                {obtenerIconoEstado(solicitud.estado)}
+                <span>{solicitud.estado.charAt(0).toUpperCase() + solicitud.estado.slice(1)}</span>
+              </div>
+            </div>
+            
+            <div className="solicitud-monto-destacado">
+              {formatearMontoConSimbolo(solicitud.monto)}
+            </div>
+          </div>
+
+          {/* Fechas adicionales (solo si existen) */}
+          <div className="solicitud-fechas-adicionales">
+            {solicitud.fechaEmision && (
+              <div className="fecha-emision">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20,6 9,17 4,12"/>
+                </svg>
+                Emitida: {formatearFechaHora(solicitud.fechaEmision)}
+              </div>
+            )}
+
+            {solicitud.fechaCancelacion && (
+              <div className="fecha-cancelacion">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Cancelada: {formatearFechaHora(solicitud.fechaCancelacion)}
+              </div>
+            )}
+          </div>
+
+          {/* Acciones inline solo para pendientes */}
+          {solicitud.estado === 'pendiente' && (
+            <div className="solicitud-acciones-inline">
+              <button
+                onClick={() => manejarEditarSolicitud(solicitud)}
+                disabled={procesandoId === solicitud.id}
+                className="btn-accion-inline btn-editar-inline"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Editar
+              </button>
+              
+              <button
+                onClick={() => manejarEmitirFactura(solicitud)}
+                disabled={procesandoId === solicitud.id}
+                className="btn-accion-inline btn-emitir-inline"
+              >
+                {procesandoId === solicitud.id ? (
+                  <>
+                    <div className="spinner-small"></div>
+                    <span>Emitiendo...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20,6 9,17 4,12"/>
+                    </svg>
+                    Emitir
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={() => manejarCancelarSolicitud(solicitud)}
+                disabled={procesandoId === solicitud.id}
+                className="btn-accion-inline btn-cancelar-inline"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Cancelar
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* COMENTARIO DE CANCELACIÓN - COMPLETAMENTE SEPARADO ABAJO */}
+      {solicitud.estado === 'cancelada' && solicitud.comentarioCancelacion && (
+        <div className="comentario-cancelacion-separado">
+          <div className="comentario-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span className="comentario-titulo">Motivo de cancelación:</span>
+          </div>
+          <p className="comentario-texto-separado">{solicitud.comentarioCancelacion}</p>
+        </div>
+      )}
+    </div>
+  ))}
+</div>
         )}
       </div>
 
@@ -936,469 +1014,662 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
 
       <style>{`
         .solicitudes-container {
-          padding: 2rem;
-          max-width: 1400px;
-          margin: 0 auto;
-          background: #f8fafc;
-          min-height: 100vh;
-        }
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #f8fafc;
+  min-height: 100vh;
+}
 
-        .solicitudes-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
+.solicitudes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
 
-        .solicitudes-header h2 {
-          color: #1f2937;
-          margin: 0;
-          font-size: 1.875rem;
-          font-weight: 700;
-        }
+.solicitudes-header h2 {
+  color: #1f2937;
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+}
 
-        .solicitudes-subtitle {
-          color: #6b7280;
-          margin: 0.25rem 0 0 0;
-          font-size: 1rem;
-        }
+.solicitudes-subtitle {
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
+  font-size: 1rem;
+}
 
-        .header-actions {
-          display: flex;
-          gap: 1rem;
-        }
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
 
-        .btn-refrescar {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1rem;
-          background: white;
-          color: #374151;
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 500;
-          transition: all 0.2s;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
+.btn-refrescar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
 
-        .btn-refrescar:hover:not(:disabled) {
-          background: #f9fafb;
-          border-color: #9ca3af;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
+.btn-refrescar:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
-        .btn-refrescar:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
+.btn-refrescar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-        .btn-nueva-solicitud {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 500;
-          transition: all 0.2s;
-          box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
-        }
+.btn-nueva-solicitud {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
+}
 
-        .btn-nueva-solicitud:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
-        }
+.btn-nueva-solicitud:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+}
 
-        .filtros-container {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 16px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-          margin-bottom: 2rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 1rem;
-          border: 1px solid #e5e7eb;
-        }
+.filtros-container {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border: 1px solid #e5e7eb;
+}
 
-        .filtros-grupo {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
+.filtros-grupo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
 
-        .filtros-grupo label {
-          font-weight: 500;
-          color: #374151;
-        }
+.filtros-grupo label {
+  font-weight: 500;
+  color: #374151;
+}
 
-        .filtro-select {
-          padding: 0.5rem 1rem;
-          border: 2px solid #e5e7eb;
-          border-radius: 8px;
-          background: white;
-          color: #374151;
-          font-size: 0.875rem;
-          cursor: pointer;
-          transition: border-color 0.2s;
-        }
+.filtro-select {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
 
-        .filtro-select:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
+.filtro-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
 
-        .resumen-filtros {
-          color: #6b7280;
-          font-size: 0.875rem;
-        }
+.resumen-filtros {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
 
-        .solicitudes-lista {
-          background: white;
-          border-radius: 16px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-          padding: 1.5rem;
-          border: 1px solid #e5e7eb;
-        }
+.solicitudes-lista {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
 
-        .empty-state {
-          text-align: center;
-          padding: 4rem 2rem;
-          color: #6b7280;
-        }
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #6b7280;
+}
 
-        .empty-icon {
-          margin: 0 auto 1rem;
-        }
+.empty-icon {
+  margin: 0 auto 1rem;
+}
 
-        .empty-state p {
-          font-size: 1.125rem;
-          margin-bottom: 0.5rem;
-          color: #374151;
-        }
+.empty-state p {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
 
-        .solicitudes-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-          gap: 1.5rem;
-        }
+/* DISEÑO PRINCIPAL - LISTA VERTICAL */
+.solicitudes-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
-        .solicitud-card {
-          border: 2px solid #e5e7eb;
-          border-radius: 16px;
-          padding: 1.5rem;
-          transition: all 0.2s;
-          background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-          position: relative;
-          overflow: hidden;
-        }
+.solicitud-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  gap: 0;
+}
 
-        .solicitud-card::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 4px;
-          background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981);
-        }
+/* Línea lateral dinámica según estado */
+.solicitud-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
 
-        .solicitud-card:hover {
-          border-color: #3b82f6;
-          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
-          transform: translateY(-2px);
-        }
+.solicitud-card.estado-pendiente::before {
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+}
 
-        .solicitud-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        }
+.solicitud-card.estado-emitida::before {
+  background: linear-gradient(180deg, #10b981, #059669);
+}
 
-        .solicitud-info h4 {
-          margin: 0 0 0.5rem 0;
-          color: #1f2937;
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
+.solicitud-card.estado-cancelada::before {
+  background: linear-gradient(180deg, #ef4444, #dc2626);
+}
 
-        .estado-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
+.solicitud-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
 
-        .estado-pendiente {
-          background: #fef3c7;
-          color: #92400e;
-          border: 1px solid #fbbf24;
-        }
+/* Contenido principal de la tarjeta */
+.solicitud-contenido-completo {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: 80px;
+}
 
-        .estado-emitida {
-          background: #d1fae5;
-          color: #065f46;
-          border: 1px solid #10b981;
-        }
+/* Número de solicitud circular */
+.solicitud-numero {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  margin-right: 1.5rem;
+  flex-shrink: 0;
+  align-self: center;
+}
 
-        .estado-cancelada {
-          background: #fee2e2;
-          color: #991b1b;
-          border: 1px solid #ef4444;
-        }
+/* CONTENIDO PRINCIPAL REORGANIZADO */
+.solicitud-contenido-principal {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex: 1;
+  min-width: 0;
+}
 
-        .solicitud-monto {
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #059669;
-          background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-          padding: 0.5rem 1rem;
-          border-radius: 8px;
-          border: 1px solid #a7f3d0;
-        }
+/* Información del cliente - más espacio */
+.solicitud-cliente-info {
+  flex: 2;
+  min-width: 200px;
+}
 
-        .solicitud-cliente,
-        .solicitud-producto {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          margin-bottom: 1rem;
-          padding: 1rem;
-          background: #f9fafb;
-          border-radius: 12px;
-          border: 1px solid #e5e7eb;
-        }
+.cliente-nombre-principal {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+}
 
-        .cliente-icon,
-        .producto-icon {
-          width: 36px;
-          height: 36px;
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          flex-shrink: 0;
-        }
+.cliente-ruc-secundario {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+  .cliente-email-secundario {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
 
-        .cliente-nombre {
-          font-weight: 600;
-          color: #1f2937;
-        }
+/* Actualizar la información del cliente para más espacio */
+.solicitud-cliente-info {
+  flex: 2.5; /* Aumentar de 2 a 2.5 para más espacio */
+  min-width: 220px; /* Aumentar de 200px a 220px */
+}
 
-        .cliente-ruc {
-          font-size: 0.875rem;
-          color: #6b7280;
-        }
+/* Ajustar filtros para que se vean mejor */
+.filtros-container {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem; /* Aumentar gap de 1rem a 1.5rem */
+  border: 1px solid #e5e7eb;
+}
 
-        .solicitud-fechas {
-          margin-bottom: 1rem;
-          background: #f9fafb;
-          padding: 1rem;
-          border-radius: 12px;
-          border: 1px solid #e5e7eb;
-        }
+.filtros-grupo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 180px; /* Asegurar ancho mínimo */
+}
 
-        .fecha-item {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 0.25rem;
-        }
+/* Responsive mejorado para filtros */
+@media (max-width: 968px) {
+  .filtros-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .filtros-grupo {
+    min-width: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .filtros-grupo label {
+    text-align: center;
+  }
+}
 
-        .fecha-item:last-child {
-          margin-bottom: 0;
-        }
+/* Información del producto */
+.solicitud-producto-info {
+  flex: 2;
+  min-width: 150px;
+}
 
-        .fecha-label {
-          font-size: 0.875rem;
-          color: #6b7280;
-          font-weight: 500;
-        }
+.producto-nombre {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin: 0 0 0.25rem 0;
+}
 
-        .fecha-valor {
-          font-size: 0.875rem;
-          color: #374151;
-          font-weight: 500;
-        }
+.producto-fecha {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
 
-        .comentario-cancelacion {
-          background: #fef2f2;
-          border: 1px solid #fecaca;
-          border-radius: 12px;
-          padding: 1rem;
-          margin-bottom: 1rem;
-        }
+/* SECCIÓN DERECHA REORGANIZADA */
+.solicitud-info-derecha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  min-width: 250px;
+  flex-shrink: 0;
+}
 
-        .comentario-label {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: #991b1b;
-          display: block;
-          margin-bottom: 0.25rem;
-        }
+/* Fila superior: Estado y Monto */
+.solicitud-fila-superior {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  justify-content: flex-end;
+}
 
-        .comentario-texto {
-          font-size: 0.875rem;
-          color: #7f1d1d;
-        }
+.solicitud-estado-badge {
+  flex-shrink: 0;
+}
 
-        .solicitud-acciones {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: 0.5rem;
-        }
+.solicitud-monto-destacado {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #059669;
+  flex-shrink: 0;
+}
 
-        .btn-editar,
-        .btn-emitir,
-        .btn-cancelar {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.375rem;
-          padding: 0.75rem 0.5rem;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 500;
-          font-size: 0.8rem;
-          transition: all 0.2s;
-          text-align: center;
-        }
+/* Fila inferior: Fechas adicionales */
+.solicitud-fechas-adicionales {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: right;
+  width: 100%;
+}
 
-        .btn-editar {
-          background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-          color: white;
-        }
+.fecha-emision {
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
 
-        .btn-editar:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-        }
+.fecha-cancelacion {
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
 
-        .btn-emitir {
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-        }
+/* Badge de estado */
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
 
-        .btn-emitir:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
+.estado-pendiente {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fbbf24;
+}
 
-        .btn-cancelar {
-          background: linear-gradient(135deg, #ef4444, #dc2626);
-          color: white;
-        }
+.estado-emitida {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
 
-        .btn-cancelar:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
+.estado-cancelada {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
 
-        .btn-editar:disabled,
-        .btn-emitir:disabled,
-        .btn-cancelar:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-        }
+/* Acciones solo para pendientes */
+.solicitud-acciones-inline {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
 
-        .spinner-small {
-          width: 14px;
-          height: 14px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top: 2px solid white;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
+.btn-accion-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+  min-width: 70px;
+  justify-content: center;
+}
 
-        .loading-state,
-        .error-state {
-          text-align: center;
-          padding: 2rem;
-        }
+.btn-editar-inline {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+}
 
-        .loading-spinner {
-          width: 40px;
-          height: 40px;
-          border: 4px solid #e5e7eb;
-          border-top: 4px solid #3b82f6;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 1rem;
-        }
-          .modal-overlay {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            z-index: 9999 !important;
-        }
+.btn-editar-inline:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(139, 92, 246, 0.3);
+}
 
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
+.btn-emitir-inline {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
 
-        @media (max-width: 768px) {
-          .solicitudes-container {
-            padding: 1rem;
-          }
+.btn-emitir-inline:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+}
 
-          .solicitudes-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: stretch;
-          }
+.btn-cancelar-inline {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
 
-          .header-actions {
-            flex-direction: column;
-          }
+.btn-cancelar-inline:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3);
+}
 
-          .filtros-container {
-            flex-direction: column;
-            align-items: stretch;
-          }
+.btn-accion-inline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
 
-          .solicitudes-grid {
-            grid-template-columns: 1fr;
-          }
+.spinner-small {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
 
-          .solicitud-acciones {
-            grid-template-columns: 1fr;
-            gap: 0.75rem;
-          }
+/* COMENTARIO DE CANCELACIÓN - COMPLETAMENTE SEPARADO */
+.comentario-cancelacion-separado {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  border-top: 3px solid #dc2626;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-          .solicitud-header {
-            flex-direction: column;
-            gap: 0.75rem;
-          }
+.comentario-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
 
-          .solicitud-monto {
-            align-self: flex-start;
-          }
-        }
+.comentario-titulo {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #991b1b;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.comentario-texto-separado {
+  font-size: 0.875rem;
+  color: #7f1d1d;
+  margin: 0;
+  line-height: 1.5;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  border-left: 3px solid #dc2626;
+  font-style: italic;
+}
+
+/* ELIMINAR estilos antiguos que no se usan */
+.comentario-cancelacion-inline {
+  display: none;
+}
+
+.comentario-label-inline {
+  display: none;
+}
+
+.comentario-texto-inline {
+  display: none;
+}
+
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 968px) {
+  .solicitud-contenido-completo {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .solicitud-numero {
+    align-self: center;
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .solicitud-contenido-principal {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .solicitud-cliente-info,
+  .solicitud-producto-info {
+    text-align: center;
+    min-width: auto;
+  }
+
+  .solicitud-info-derecha {
+    align-items: center;
+    min-width: auto;
+  }
+
+  .solicitud-fila-superior {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .solicitud-fechas-adicionales {
+    text-align: center;
+  }
+
+  .fecha-emision,
+  .fecha-cancelacion {
+    justify-content: center;
+  }
+
+  .comentario-cancelacion-separado {
+    margin-top: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .solicitudes-container {
+    padding: 1rem;
+  }
+
+  .solicitudes-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    flex-direction: column;
+  }
+
+  .filtros-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .solicitud-card::before {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: auto;
+    width: auto;
+    height: 4px;
+  }
+
+  .solicitud-acciones-inline {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-accion-inline {
+    min-width: auto;
+  }
+}
       `}</style>
     </div>
   );

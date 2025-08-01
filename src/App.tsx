@@ -1,5 +1,8 @@
 // src/App.tsx - INTEGRADO CON SÚPER ELIMINADOR
 import React, { useState, useEffect } from 'react';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from './services/firebase';
+import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Solicitudes from './components/Solicitudes';
@@ -18,10 +21,33 @@ interface PropsComponente {
 }
 
 function App() {
+  const [usuario, setUsuario] = useState<User | null>(null);
+  const [cargandoAuth, setCargandoAuth] = useState<boolean>(true);
   const [vistaActual, setVistaActual] = useState<TipoVista>('dashboard');
   const [sidebarAbierto, setSidebarAbierto] = useState<boolean>(true);
   const [mostrarAdminDelete, setMostrarAdminDelete] = useState<boolean>(false);
   const { notificaciones, mostrarNotificacion, ocultarNotificacion } = useNotificaciones();
+
+// Listener de autenticación - FORZAR LOGOUT INICIAL
+  useEffect(() => {
+    console.log('🔄 Iniciando proceso de autenticación...');
+    
+    // FORZAR LOGOUT PARA LIMPIAR SESIÓN PERSISTENTE
+    auth.signOut().then(() => {
+      console.log('🧹 Sesión limpiada');
+      
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        console.log('📱 Estado auth:', user ? `Logueado: ${user.email}` : 'Sin login');
+        setUsuario(user);
+        setCargandoAuth(false);
+      });
+
+      return () => unsubscribe();
+    }).catch((error) => {
+      console.error('Error en signOut:', error);
+      setCargandoAuth(false);
+    });
+  }, []);
 
   // Manejar redimensionamiento de ventana para responsividad
   useEffect(() => {
@@ -72,6 +98,17 @@ function App() {
     setSidebarAbierto(!sidebarAbierto);
   };
 
+  // Función para cerrar sesión - NUEVO
+  const cerrarSesion = async () => {
+    try {
+      await auth.signOut();
+      mostrarNotificacion('Sesión cerrada exitosamente', 'success');
+    } catch (error) {
+      console.error('Error cerrando sesión:', error);
+      mostrarNotificacion('Error al cerrar sesión', 'error');
+    }
+  };
+
   // Renderizar componente actual
   const renderizarVista = () => {
     const props = { mostrarNotificacion };
@@ -90,6 +127,25 @@ function App() {
     }
   };
 
+  // Pantalla de carga inicial - NUEVO
+  if (cargandoAuth) {
+    return (
+      <div className="auth-loading">
+        <div className="loading-content">
+          <div className="loading-spinner-auth"></div>
+          <h2>Sistema de Facturación</h2>
+          <p>Verificando autenticación...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay usuario, mostrar login - NUEVO
+  if (!usuario) {
+    return <Login />;
+  }
+
+  // Si hay usuario, mostrar aplicación - ORIGINAL
   return (
     <div className="app">
       {/* Overlay para móvil cuando sidebar está abierto */}
@@ -106,6 +162,8 @@ function App() {
         onCambiarSeccion={cambiarVista}
         abierto={sidebarAbierto}
         onToggle={toggleSidebar}
+        usuario={usuario}
+        onCerrarSesion={cerrarSesion}
       />
 
       {/* Contenido principal */}
@@ -179,6 +237,39 @@ function App() {
 
       {/* Estilos CSS - MEJORADOS CON MODALES CENTRADOS */}
       <style>{`
+        .auth-loading {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+
+        .loading-content {
+          text-align: center;
+        }
+
+        .loading-spinner-auth {
+          width: 48px;
+          height: 48px;
+          border: 4px solid rgba(255, 255, 255, 0.3);
+          border-top: 4px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 2rem;
+        }
+
+        .loading-content h2 {
+          margin: 0 0 0.5rem 0;
+          font-size: 1.5rem;
+        }
+
+        .loading-content p {
+          margin: 0;
+          opacity: 0.8;
+        }
+
         .app {
           display: flex;
           min-height: 100vh;

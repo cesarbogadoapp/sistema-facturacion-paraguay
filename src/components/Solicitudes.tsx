@@ -459,6 +459,49 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
   // Filtros
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'pendiente' | 'emitida' | 'cancelada'>('todos');
   const [filtroFecha, setFiltroFecha] = useState<'todas' | 'hoy' | 'ayer' | 'esta_semana' | 'este_mes' | 'mes_pasado'>('todas');
+  const [descargandoCSV, setDescargandoCSV] = useState<boolean>(false);
+
+  const descargarCSV = async () => {
+  setDescargandoCSV(true);
+  try {
+    // Crear CSV content
+    let csvContent = 'ID,Cliente,RUC,Email,Producto,Monto,Estado,Fecha Solicitud,Fecha Emision\n';
+    
+    solicitudesFiltradas.forEach(solicitud => {
+      csvContent += `"${solicitud.id || ''}",`;
+      csvContent += `"${solicitud.cliente.razonSocial}",`;
+      csvContent += `"${solicitud.cliente.ruc}",`;
+      csvContent += `"${solicitud.cliente.email}",`;
+      csvContent += `"${solicitud.producto.nombre}",`;
+      csvContent += `"${formatearMontoConSimbolo(solicitud.monto)}",`;
+      csvContent += `"${solicitud.estado}",`;
+      csvContent += `"${formatearFechaHora(solicitud.fechaSolicitud)}",`;
+      csvContent += `"${solicitud.fechaEmision ? formatearFechaHora(solicitud.fechaEmision) : 'N/A'}"\n`;
+    });
+
+    // Crear y descargar archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `solicitudes_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+    mostrarNotificacion('Archivo CSV descargado exitosamente', 'success');
+  } catch (error) {
+    console.error('Error descargando CSV:', error);
+    mostrarNotificacion('Error al descargar el archivo CSV', 'error');
+  } finally {
+    setDescargandoCSV(false);
+  }
+};
+
   // Cargar datos
   useEffect(() => {
     cargarDatos();
@@ -728,6 +771,23 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
             </svg>
             Actualizar
           </button>
+          <button onClick={descargarCSV} disabled={descargandoCSV} className="btn-descargar-csv">
+            {descargandoCSV ? (
+              <>
+                <div className="spinner-small"></div>
+                <span>Generando...</span>
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7,10 12,15 17,10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Descargar CSV</span>
+              </>
+            )}
+          </button>
           <button 
             onClick={() => setMostrarFormulario(true)}
             className="btn-nueva-solicitud"
@@ -883,8 +943,9 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
 
           {/* Acciones inline solo para pendientes */}
           {solicitud.estado === 'pendiente' && (
-            <div className="solicitud-acciones-inline">
+            <div className="solicitud-acciones-inline" key={`acciones-${solicitud.id}`}>
               <button
+                key={`editar-${solicitud.id}`}
                 onClick={() => manejarEditarSolicitud(solicitud)}
                 disabled={procesandoId === solicitud.id}
                 className="btn-accion-inline btn-editar-inline"
@@ -897,6 +958,7 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
               </button>
               
               <button
+                key={`emitir-${solicitud.id}`}
                 onClick={() => manejarEmitirFactura(solicitud)}
                 disabled={procesandoId === solicitud.id}
                 className="btn-accion-inline btn-emitir-inline"
@@ -917,6 +979,7 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
               </button>
               
               <button
+                key={`cancelar-${solicitud.id}`}
                 onClick={() => manejarCancelarSolicitud(solicitud)}
                 disabled={procesandoId === solicitud.id}
                 className="btn-accion-inline btn-cancelar-inline"
@@ -1091,6 +1154,32 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
 .btn-nueva-solicitud:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+}
+
+.btn-descargar-csv {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.25);
+}
+
+.btn-descargar-csv:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+}
+
+.btn-descargar-csv:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .filtros-container {

@@ -8,6 +8,8 @@ interface SidebarProps {
   onCambiarSeccion: (seccion: TipoVista) => void;
   abierto?: boolean;
   onToggle?: () => void;
+  usuario?: any;
+  onCerrarSesion?: () => void;
 }
 
 // Iconos SVG profesionales
@@ -51,7 +53,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   seccionActiva, 
   onCambiarSeccion, 
   abierto = true,
-  onToggle 
+  onToggle,
+  usuario,
+  onCerrarSesion
 }) => {
   const secciones: Array<{
     id: TipoVista, 
@@ -145,14 +149,42 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Footer del sidebar */}
       <div className="sidebar-footer">
         <div className="footer-info">
-          <div className="footer-version">
-            <span className="version-label">Versión</span>
-            <span className="version-number">1.0.0</span>
-          </div>
-          <div className="footer-status">
-            <div className="status-indicator"></div>
-            <span>Sistema Operativo</span>
-          </div>
+          {/* Información del usuario */}
+            <div className="footer-usuario">
+              <div className="usuario-avatar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div className="usuario-info">
+                  <span className="usuario-nombre">
+                    {usuario?.displayName || usuario?.email?.split('@')[0] || 'Usuario'}
+                  </span>
+                  <span className="usuario-email">{usuario?.email || 'usuario@email.com'}</span>
+                </div>
+              </div>
+    
+            {/* Botón de cerrar sesión */}
+            {onCerrarSesion && (
+              <button onClick={onCerrarSesion} className="btn-logout" title="Cerrar Sesión">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16,17 21,12 16,7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar Sesión
+              </button>
+            )}
+
+            <div className="footer-version">
+              <span className="version-label">Versión</span>
+              <span className="version-number">1.0.0</span>
+            </div>
+            <div className="footer-status">
+              <div className="status-indicator"></div>
+              <span>Sistema Operativo</span>
+            </div>
         </div>
       </div>
 
@@ -494,6 +526,100 @@ const Sidebar: React.FC<SidebarProps> = ({
             animation: none;
           }
         }
+        
+        .footer-usuario {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem;
+          background: rgba(15, 23, 42, 0.8);
+          border-radius: 8px;
+          margin-bottom: 1rem;
+          border: 1px solid #334155;
+        }
+
+        .usuario-avatar {
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          flex-shrink: 0;
+          }
+
+        .usuario-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.125rem;
+          min-width: 0;
+          flex: 1;
+        }
+
+        .usuario-nombre {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: white;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .usuario-email {
+          font-size: 0.75rem;
+          color: #94a3b8;
+          white-space: nowrap;  
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        @media (max-width: 768px) {
+          .footer-usuario {
+          padding: 0.5rem;
+        }
+  
+        .usuario-info {
+          gap: 0;
+        }
+  
+        .usuario-nombre {
+          font-size: 0.8rem;
+        }
+  
+        .usuario-email {
+          font-size: 0.7rem;
+        }
+
+        .btn-logout {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          width: 100%;
+          padding: 0.75rem;
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          border-radius: 8px;
+          color: #ef4444;
+          cursor: pointer;
+          font-size: 0.875rem;
+          font-weight: 500;
+          transition: all 0.2s;
+          margin-bottom: 1rem;
+        }
+
+        .btn-logout:hover {
+          background: rgba(239, 68, 68, 0.2);
+          border-color: rgba(239, 68, 68, 0.3);
+          transform: translateY(-1px);
+        }
+
+        .btn-logout:active {
+          transform: translateY(0);
+        }
+      }
+
       `}</style>
     </div>
   );

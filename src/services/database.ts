@@ -1,4 +1,4 @@
-// src/services/database.ts
+// src/services/database.ts - ARCHIVO COMPLETO CORREGIDO
 import { 
   collection, 
   addDoc, 
@@ -43,8 +43,22 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
   }
 };
 
+// NUEVO: Listener en tiempo real para clientes
+export const escucharClientes = (callback: (clientes: Cliente[]) => void): Unsubscribe => {
+  const q = query(collection(db, 'clientes'), orderBy('fechaCreacion', 'desc'));
+  return onSnapshot(q, (querySnapshot) => {
+    const clientes = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Cliente));
+    callback(clientes);
+  }, (error) => {
+    console.error('Error en listener de clientes:', error);
+  });
+};
+
 // ========================
-// GESTIÓN DE PRODUCTOS - CORREGIDA
+// GESTIÓN DE PRODUCTOS
 // ========================
 export const crearProducto = async (producto: Omit<Producto, 'id' | 'fechaCreacion'>): Promise<Producto> => {
   try {
@@ -59,7 +73,6 @@ export const crearProducto = async (producto: Omit<Producto, 'id' | 'fechaCreaci
   }
 };
 
-// NUEVA FUNCIÓN: Obtener productos desde la colección productos
 export const obtenerProductos = async (): Promise<Producto[]> => {
   try {
     const querySnapshot = await getDocs(
@@ -76,7 +89,7 @@ export const obtenerProductos = async (): Promise<Producto[]> => {
   }
 };
 
-// NUEVA FUNCIÓN: Escuchar cambios en productos en tiempo real
+// Listener en tiempo real para productos
 export const escucharProductos = (callback: (productos: Producto[]) => void): Unsubscribe => {
   const q = query(collection(db, 'productos'), orderBy('fechaCreacion', 'desc'));
   return onSnapshot(q, (querySnapshot) => {
@@ -86,6 +99,8 @@ export const escucharProductos = (callback: (productos: Producto[]) => void): Un
       fechaCreacion: doc.data().fechaCreacion
     } as Producto));
     callback(productos);
+  }, (error) => {
+    console.error('Error en listener de productos:', error);
   });
 };
 
@@ -125,7 +140,7 @@ export const eliminarProducto = async (id: string): Promise<boolean> => {
 };
 
 // ========================
-// GESTIÓN DE SOLICITUDES
+// GESTIÓN DE SOLICITUDES - MEJORADA CON LISTENERS
 // ========================
 export const crearSolicitud = async (solicitud: Omit<Solicitud, 'id' | 'estado' | 'fechaSolicitud'>): Promise<Solicitud> => {
   try {
@@ -153,25 +168,43 @@ export const obtenerSolicitudes = async (): Promise<Solicitud[]> => {
   }
 };
 
-// NUEVA FUNCIÓN: Escuchar cambios en solicitudes en tiempo real
+// ✨ CLAVE: Listener en tiempo real para solicitudes - SOLUCIÓN PRINCIPAL
 export const escucharSolicitudes = (callback: (solicitudes: Solicitud[]) => void): Unsubscribe => {
   const q = query(collection(db, 'solicitudes'), orderBy('fechaSolicitud', 'desc'));
   return onSnapshot(q, (querySnapshot) => {
-    const solicitudes = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Solicitud));
-    callback(solicitudes);
+    try {
+      const solicitudes = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Solicitud));
+      callback(solicitudes);
+    } catch (error) {
+      console.error('Error procesando snapshot de solicitudes:', error);
+    }
+  }, (error) => {
+    console.error('Error en listener de solicitudes:', error);
+    // En caso de error, intentar reconectar
+    setTimeout(() => {
+      escucharSolicitudes(callback);
+    }, 5000);
   });
 };
 
+// ✨ MEJORADA: Emitir factura con confirmación explícita
 export const emitirFactura = async (solicitudId: string): Promise<boolean> => {
   try {
     const solicitudRef = doc(db, 'solicitudes', solicitudId);
+    
+    // Actualizar con confirmación explícita
     await updateDoc(solicitudRef, {
       estado: 'emitida',
-      fechaEmision: new Date()
+      fechaEmision: new Date(),
+      fechaModificacion: new Date()
     });
+    
+    // Esperar un momento para asegurar que se escribió
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     return true;
   } catch (error) {
     console.error('Error emitiendo factura:', error);
@@ -179,14 +212,22 @@ export const emitirFactura = async (solicitudId: string): Promise<boolean> => {
   }
 };
 
+// ✨ MEJORADA: Cancelar solicitud con confirmación explícita
 export const cancelarSolicitud = async (solicitudId: string, comentario: string = ''): Promise<boolean> => {
   try {
     const solicitudRef = doc(db, 'solicitudes', solicitudId);
+    
+    // Actualizar con confirmación explícita
     await updateDoc(solicitudRef, {
       estado: 'cancelada',
       fechaCancelacion: new Date(),
-      comentarioCancelacion: comentario
+      comentarioCancelacion: comentario,
+      fechaModificacion: new Date()
     });
+    
+    // Esperar un momento para asegurar que se escribió
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     return true;
   } catch (error) {
     console.error('Error cancelando solicitud:', error);
@@ -194,8 +235,29 @@ export const cancelarSolicitud = async (solicitudId: string, comentario: string 
   }
 };
 
+// ✨ MEJORADA: Actualizar solicitud con confirmación explícita
+export const actualizarSolicitud = async (id: string, datosActualizados: Partial<Solicitud>): Promise<boolean> => {
+  try {
+    const solicitudRef = doc(db, 'solicitudes', id);
+    
+    // Actualizar con confirmación explícita
+    await updateDoc(solicitudRef, {
+      ...datosActualizados,
+      fechaModificacion: new Date()
+    });
+    
+    // Esperar un momento para asegurar que se escribió
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    return true;
+  } catch (error) {
+    console.error('Error actualizando solicitud:', error);
+    throw error;
+  }
+};
+
 // ========================
-// ESTADÍSTICAS Y MÉTRICAS
+// ESTADÍSTICAS Y MÉTRICAS - MEJORADAS
 // ========================
 export const obtenerEstadisticas = async (): Promise<Estadisticas> => {
   try {
@@ -234,6 +296,18 @@ export const obtenerEstadisticas = async (): Promise<Estadisticas> => {
   }
 };
 
+// ✨ Listener en tiempo real para estadísticas
+export const escucharEstadisticas = (callback: (estadisticas: Estadisticas) => void): Unsubscribe => {
+  return onSnapshot(collection(db, 'solicitudes'), async () => {
+    try {
+      const estadisticas = await obtenerEstadisticas();
+      callback(estadisticas);
+    } catch (error) {
+      console.error('Error calculando estadísticas en tiempo real:', error);
+    }
+  });
+};
+
 // ========================
 // FUNCIONES DE BÚSQUEDA
 // ========================
@@ -264,7 +338,7 @@ export const buscarProductos = async (termino: string): Promise<Producto[]> => {
 };
 
 // ========================
-// FUNCIONES DE COMPATIBILIDAD (para componentes antiguos)
+// FUNCIONES DE COMPATIBILIDAD
 // ========================
 export const buscarClientePorRuc = async (ruc: string): Promise<Cliente | null> => {
   try {
@@ -283,19 +357,5 @@ export const buscarProductoPorNombre = async (nombre: string): Promise<Producto 
   } catch (error) {
     console.error('Error buscando producto por nombre:', error);
     return null;
-  }
-};
-
-export const actualizarSolicitud = async (id: string, datosActualizados: Partial<Solicitud>): Promise<boolean> => {
-  try {
-    const solicitudRef = doc(db, 'solicitudes', id);
-    await updateDoc(solicitudRef, {
-      ...datosActualizados,
-      fechaModificacion: new Date()
-    });
-    return true;
-  } catch (error) {
-    console.error('Error actualizando solicitud:', error);
-    throw error;
   }
 };

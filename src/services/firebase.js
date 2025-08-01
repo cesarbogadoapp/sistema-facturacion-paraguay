@@ -1,7 +1,9 @@
+// src/services/firebase.js - ARCHIVO CORREGIDO
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 
-// Tu configuración de Firebase
+// Tu configuración de Firebase (NO CAMBIES ESTO)
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -16,5 +18,13 @@ const app = initializeApp(firebaseConfig);
 
 // Inicializar Firestore (la base de datos)
 export const db = getFirestore(app);
+
+// Inicializar Firebase Auth
+export const auth = getAuth(app);
+
+// Establecer persistencia local por defecto
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error('Error estableciendo persistencia de auth:', error);
+});
 
 export default app;

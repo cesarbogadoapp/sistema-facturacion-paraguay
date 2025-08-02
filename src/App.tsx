@@ -83,6 +83,43 @@ function App() {
     return () => window.removeEventListener('keydown', manejarTeclas);
   }, [mostrarNotificacion]);
 
+// Auto-centrado de modales cuando se abren - VERSIÓN CORREGIDA
+  useEffect(() => {
+    const observeModals = () => {
+      const modals = document.querySelectorAll('.modal-overlay, .overlay-modal');
+      modals.forEach(modal => {
+        const htmlModal = modal as HTMLElement; // Cast a HTMLElement
+        
+        if (htmlModal && !htmlModal.classList.contains('observer-added')) {
+          htmlModal.classList.add('observer-added');
+          
+          // Centrar automáticamente cuando se hace visible
+          const observer = new MutationObserver(() => {
+            if (htmlModal.style.display !== 'none' && htmlModal.offsetParent !== null) {
+              setTimeout(() => {
+                htmlModal.scrollIntoView({ 
+                  behavior: 'smooth', 
+                  block: 'center', 
+                  inline: 'center' 
+                });
+              }, 100);
+            }
+          });
+          
+          observer.observe(htmlModal, { 
+            attributes: true, 
+            attributeFilter: ['style', 'class'] 
+          });
+        }
+      });
+    };
+
+    // Observar cada segundo por nuevos modales
+    const interval = setInterval(observeModals, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   // Función para cambiar vista
   const cambiarVista = (nuevaVista: TipoVista) => {
     setVistaActual(nuevaVista);
@@ -399,6 +436,45 @@ function App() {
           z-index: 9999 !important;
           padding: 1rem !important;
           overflow-y: auto !important;
+        }
+
+        /* FORZAR SCROLL AUTOMÁTICO AL CENTRO */
+        .modal-overlay,
+        .overlay-modal {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          background: rgba(0, 0, 0, 0.5) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          z-index: 9999 !important;
+          padding: 1rem !important;
+          overflow-y: auto !important;
+          scroll-behavior: smooth !important;
+        }
+
+        /* CONTENIDO MODAL SIEMPRE CENTRADO */
+        .modal-content,
+        .contenido-modal {
+          background: white !important;
+          border-radius: 16px !important;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+          max-width: 90vw !important;
+          max-height: 85vh !important;
+          width: auto !important;
+          overflow-y: auto !important;
+          margin: auto !important;
+          position: relative !important;
+          transform: translateY(0) !important;
+        }
+
+        /* SCRIPT AUTOMÁTICO PARA CENTRAR MODALES */
+        .modal-overlay.active,
+        .overlay-modal.active {
+          scroll-behavior: smooth !important;
         }
 
         .modal-content {

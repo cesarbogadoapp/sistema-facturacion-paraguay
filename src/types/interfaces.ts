@@ -37,6 +37,16 @@ export interface Solicitud {
   producto: {
     nombre: string;
   };
+
+  // NUEVOS CAMPOS - AGREGAR AL FINAL
+  productos?: Array<{
+    productoId: string;
+    nombre: string;
+    cantidad: number;
+    precioUnitario: number;
+    subtotal: number;
+  }>;
+  numeroGuia?: string;
 }
 
 // Interfaces para componentes

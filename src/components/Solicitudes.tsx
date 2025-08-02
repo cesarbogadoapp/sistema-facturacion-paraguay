@@ -10,6 +10,7 @@ import {
   crearSolicitud
 } from '../services/database';
 import FormularioSolicitud from './FormularioSolicitud';
+import FormularioSolicitudMejorado from './FormularioSolicitudMejorado';
 import { Solicitud, Cliente, Producto } from '../types/interfaces';
 import { formatearMontoConSimbolo, formatearFechaHora, validarRUC, formatearMonto } from '../utils';
 
@@ -1015,16 +1016,26 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
         )}
       </div>
 
-      {/* Formulario de nueva solicitud */}
+      {/* NUEVO FORMULARIO MEJORADO */}
+      <FormularioSolicitudMejorado
+        mostrar={mostrarFormulario}
+        onCerrar={() => setMostrarFormulario(false)}
+        mostrarNotificacion={mostrarNotificacion}
+        onSolicitudCreada={() => {
+          cargarDatos();
+        }}
+      />
+
+      {/* FORMULARIO ORIGINAL - COMENTADO COMO BACKUP
       <FormularioSolicitud
         mostrar={mostrarFormulario}
         onCerrar={() => setMostrarFormulario(false)}
         mostrarNotificacion={mostrarNotificacion}
         onSolicitudCreada={() => {
           cargarDatos();
-          //mostrarNotificacion('Solicitud creada exitosamente', 'success');
         }}
       />
+      */}
 
       {/* Modal de confirmación para emitir */}
       <ModalConfirmacion

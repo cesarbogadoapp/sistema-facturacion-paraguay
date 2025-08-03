@@ -9,8 +9,8 @@ import {
   obtenerProductos,
   crearSolicitud
 } from '../services/database';
-import FormularioSolicitud from './FormularioSolicitud';
 import FormularioSolicitudMejorado from './FormularioSolicitudMejorado';
+import ModalEdicionCompleto from './ModalEdicionCompleto';
 import { Solicitud, Cliente, Producto } from '../types/interfaces';
 import { formatearMontoConSimbolo, formatearFechaHora, validarRUC, formatearMonto } from '../utils';
 
@@ -1161,8 +1161,8 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
         onComentarioChange={setComentarioCancelacion}
       />
 
-      {/* Modal de edición */}
-      <ModalEdicion
+      {/* Modal de edición COMPLETO */}
+      <ModalEdicionCompleto
         mostrar={mostrarModalEdicion}
         solicitud={solicitudSeleccionada}
         onGuardar={guardarEdicionSolicitud}

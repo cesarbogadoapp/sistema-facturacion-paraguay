@@ -83,7 +83,7 @@ function App() {
     return () => window.removeEventListener('keydown', manejarTeclas);
   }, [mostrarNotificacion]);
 
-// Auto-centrado de modales cuando se abren - VERSIÓN CORREGIDA
+  // Auto-centrado de modales cuando se abren - VERSIÓN ORIGINAL
   useEffect(() => {
     const observeModals = () => {
       const modals = document.querySelectorAll('.modal-overlay, .overlay-modal');
@@ -422,98 +422,49 @@ function App() {
           transform: translateY(0) scale(0.95);
         }
 
-        /* SOLUCIÓN UNIVERSAL PARA MODALES CENTRADOS */
-        .modal-overlay {
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          background: rgba(0, 0, 0, 0.5) !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          z-index: 9999 !important;
-          padding: 1rem !important;
-          overflow-y: auto !important;
-        }
-
-        /* FORZAR SCROLL AUTOMÁTICO AL CENTRO */
+      /* SOLUCIÓN UNIVERSAL PARA MODALES CENTRADOS */
         .modal-overlay,
-        .overlay-modal {
+        .overlay-modal,
+        [class*="modal-overlay"],
+        [class*="Modal-overlay"] {
           position: fixed !important;
           top: 0 !important;
           left: 0 !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          background: rgba(0, 0, 0, 0.5) !important;
+          width: 100vw !important;
+          height: 100vh !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
           z-index: 9999 !important;
+          background: rgba(0, 0, 0, 0.5) !important;
           padding: 1rem !important;
+          box-sizing: border-box !important;
           overflow-y: auto !important;
-          scroll-behavior: smooth !important;
         }
 
-        /* CONTENIDO MODAL SIEMPRE CENTRADO */
         .modal-content,
-        .contenido-modal {
-          background: white !important;
-          border-radius: 16px !important;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
-          max-width: 90vw !important;
-          max-height: 85vh !important;
-          width: auto !important;
-          overflow-y: auto !important;
+        .contenido-modal,
+        [class*="modal-content"],
+        [class*="Modal-content"] {
           margin: auto !important;
-          position: relative !important;
-          transform: translateY(0) !important;
-        }
-
-        /* SCRIPT AUTOMÁTICO PARA CENTRAR MODALES */
-        .modal-overlay.active,
-        .overlay-modal.active {
-          scroll-behavior: smooth !important;
-        }
-
-        .modal-content {
-          background: white !important;
-          border-radius: 16px !important;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
           max-width: 90vw !important;
           max-height: 90vh !important;
-          width: auto !important;
-          overflow-y: auto !important;
-          margin: auto !important;
+          overflow: auto !important;
           position: relative !important;
-        }
-
-        /* Para FormularioSolicitud específicamente */
-        .overlay-modal {
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          background: rgba(0, 0, 0, 0.6) !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          z-index: 1000 !important;
-          padding: 1rem !important;
-        }
-
-        .contenido-modal {
+          transform: none !important;
           background: white !important;
           border-radius: 16px !important;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-          max-width: 700px !important;
-          width: 100% !important;
-          max-height: 90vh !important;
-          overflow-y: auto !important;
-          margin: auto !important;
-          position: relative !important;
+          width: auto !important;
+        }
+
+        /* Asegurar que el backdrop sea clickeable para cerrar */
+        .modal-overlay.auto-centered {
+          cursor: pointer;
+        }
+
+        .modal-overlay.auto-centered > * {
+          cursor: default;
         }
 
         /* Animaciones suaves para modales */
@@ -533,6 +484,16 @@ function App() {
           animation: modalFadeIn 0.2s ease-out !important;
         }
 
+        /* Para navegadores que soportan backdrop-filter */
+        @supports (backdrop-filter: blur(8px)) {
+          .modal-overlay,
+          .overlay-modal {
+            backdrop-filter: blur(8px) !important;
+            background: rgba(0, 0, 0, 0.4) !important;
+          }
+        }
+
+        /* Responsive para modales */
         @media (max-width: 768px) {
           .main-content.sidebar-abierto {
             margin-left: 0;
@@ -546,7 +507,6 @@ function App() {
             display: none;
           }
 
-          /* Modales en móvil */
           .modal-overlay,
           .overlay-modal {
             padding: 0.5rem !important;
@@ -556,7 +516,6 @@ function App() {
           .contenido-modal {
             max-width: 95vw !important;
             max-height: 95vh !important;
-            margin: 0 !important;
           }
         }
 
@@ -625,19 +584,90 @@ function App() {
           .main-content {
             margin-left: 0 !important;
           }
+
         }
 
-        /* Prevenir scroll del body cuando modal está abierto */
-        .modal-open {
-          overflow: hidden !important;
-        }
-
-        /* Para navegadores que soportan backdrop-filter */
-        @supports (backdrop-filter: blur(8px)) {
+        /* FORZAR SCROLL AUTOMÁTICO AL CENTRO */
           .modal-overlay,
           .overlay-modal {
-            backdrop-filter: blur(8px) !important;
-            background: rgba(0, 0, 0, 0.4) !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 9999 !important;
+            padding: 1rem !important;
+            overflow-y: auto !important;
+            scroll-behavior: smooth !important;
+          }
+
+          /* CONTENIDO MODAL SIEMPRE CENTRADO */
+          .modal-content,
+          .contenido-modal {
+            background: white !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+            max-width: 90vw !important;
+            max-height: 85vh !important;
+            width: auto !important;
+            overflow-y: auto !important;
+            margin: auto !important;
+            position: relative !important;
+            transform: translateY(0) !important;
+          }
+
+          /* SCRIPT AUTOMÁTICO PARA CENTRAR MODALES */
+          .modal-overlay.active,
+          .overlay-modal.active {
+            scroll-behavior: smooth !important;
+          }
+
+          .modal-content {
+            background: white !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+            max-width: 90vw !important;
+            max-height: 90vh !important;
+            width: auto !important;
+            overflow-y: auto !important;
+            margin: auto !important;
+            position: relative !important;
+          }
+
+          /* Para FormularioSolicitud específicamente */
+          .overlay-modal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 1000 !important;
+            padding: 1rem !important;
+          }
+
+          .contenido-modal {
+            background: white !important;
+            border-radius: 16px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+            max-width: 700px !important;
+            width: 100% !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            margin: auto !important;
+            position: relative !important;
+          }
+
+          /* Prevenir scroll del body cuando modal está abierto */
+          .modal-open {
+            overflow: hidden !important;
           }
         }
       `}</style>

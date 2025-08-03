@@ -1,4 +1,4 @@
-// src/components/Solicitudes.tsx - CON MEJORAS VISUALES + EDICIÓN
+// src/components/Solicitudes.tsx - VERSIÓN MEJORADA COMPLETA
 import React, { useState, useEffect } from 'react';
 import { actualizarSolicitud } from '../services/database';
 import { 
@@ -819,8 +819,7 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
           </select>
         </div>
 
-      {/* NUEVO FILTRO POR FECHA */}
-      <div className="filtros-grupo">
+        <div className="filtros-grupo">
           <label htmlFor="filtroFecha">Filtrar por fecha:</label>
           <select
             id="filtroFecha"
@@ -866,157 +865,259 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
             </span>
           </div>
         ) : (
-         <div className="solicitudes-grid">
-  {solicitudesFiltradas.map((solicitud, index) => (
-    <div key={solicitud.id} className={`solicitud-card estado-${solicitud.estado}`}>
-      {/* CONTENIDO PRINCIPAL DE LA TARJETA */}
-      <div className="solicitud-contenido-completo">
-        {/* Número circular */}
-        <div className="solicitud-numero">
-          #{(index + 1).toString().padStart(2, '0')}
-        </div>
+          <div className="solicitudes-grid">
+            {solicitudesFiltradas.map((solicitud, index) => (
+              <div key={solicitud.id} className={`solicitud-card-nueva estado-${solicitud.estado}`}>
+                
+                {/* HEADER CON NÚMERO DE SOLICITUD Y ESTADO */}
+                <div className="solicitud-header-nueva">
+                  <div className="numero-solicitud-nueva">
+                    <span className="numero-icono">#{(index + 1).toString().padStart(3, '0')}</span>
+                    <span className="numero-texto">ID: {solicitud.id?.slice(-8).toUpperCase()}</span>
+                  </div>
+                  
+                  <div className="header-derecha">
+                    <div className={`estado-badge-nueva ${obtenerClaseEstado(solicitud.estado)}`}>
+                      {obtenerIconoEstado(solicitud.estado)}
+                      <span>{solicitud.estado.charAt(0).toUpperCase() + solicitud.estado.slice(1)}</span>
+                    </div>
+                    <div className="monto-principal">
+                      {formatearMontoConSimbolo(solicitud.monto)}
+                    </div>
+                  </div>
+                </div>
 
-        {/* Contenido principal izquierdo */}
-        <div className="solicitud-contenido-principal">
-          {/* Información del cliente */}
-          <div className="solicitud-cliente-info">
-          <h4 className="cliente-nombre-principal">{solicitud.cliente.razonSocial}</h4>
-          <p className="cliente-ruc-secundario">RUC: {solicitud.cliente.ruc}</p>
-          <p className="cliente-email-secundario">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,13 2,6"/>
-            </svg>
-            {solicitud.cliente.email}
-          </p>
-        </div>
+                {/* BLOQUE 1: DATOS DEL CLIENTE */}
+                <div className="bloque-seccion cliente-seccion">
+                  <div className="seccion-header">
+                    <div className="seccion-icono cliente-icono">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                    </div>
+                    <span className="seccion-titulo">Información del Cliente</span>
+                  </div>
+                  <div className="seccion-contenido">
+                    <div className="dato-fila">
+                      <span className="dato-label">Empresa:</span>
+                      <span className="dato-valor empresa-nombre">{solicitud.cliente.razonSocial}</span>
+                    </div>
+                    <div className="dato-fila">
+                      <span className="dato-label">RUC:</span>
+                      <span className="dato-valor">{solicitud.cliente.ruc}</span>
+                    </div>
+                    <div className="dato-fila">
+                      <span className="dato-label">Email:</span>
+                      <span className="dato-valor">{solicitud.cliente.email}</span>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Información del producto */}
-          <div className="solicitud-producto-info">
-            <p className="producto-nombre">{solicitud.producto.nombre}</p>
-            <p className="producto-fecha">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12,6 12,12 16,14"/>
-              </svg>
-              {formatearFechaHora(solicitud.fechaSolicitud)}
-            </p>
-          </div>
-        </div>
-
-        {/* Información derecha reorganizada */}
-        <div className="solicitud-info-derecha">
-          {/* Fila superior: Estado y Monto */}
-          <div className="solicitud-fila-superior">
-            <div className="solicitud-estado-badge">
-              <div className={`estado-badge ${obtenerClaseEstado(solicitud.estado)}`}>
-                {obtenerIconoEstado(solicitud.estado)}
-                <span>{solicitud.estado.charAt(0).toUpperCase() + solicitud.estado.slice(1)}</span>
-              </div>
-            </div>
-            
-            <div className="solicitud-monto-destacado">
-              {formatearMontoConSimbolo(solicitud.monto)}
-            </div>
-          </div>
-
-          {/* Fechas adicionales (solo si existen) */}
-          <div className="solicitud-fechas-adicionales">
-            {solicitud.fechaEmision && (
-              <div className="fecha-emision">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20,6 9,17 4,12"/>
-                </svg>
-                Emitida: {formatearFechaHora(solicitud.fechaEmision)}
-              </div>
-            )}
-
-            {solicitud.fechaCancelacion && (
-              <div className="fecha-cancelacion">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-                Cancelada: {formatearFechaHora(solicitud.fechaCancelacion)}
-              </div>
-            )}
-          </div>
-
-          {/* Acciones inline solo para pendientes */}
-          {solicitud.estado === 'pendiente' && (
-            <div className="solicitud-acciones-inline" key={`acciones-${solicitud.id}`}>
-              <button
-                key={`editar-${solicitud.id}`}
-                onClick={() => manejarEditarSolicitud(solicitud)}
-                disabled={procesandoId === solicitud.id}
-                className="btn-accion-inline btn-editar-inline"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                Editar
-              </button>
-              
-              <button
-                key={`emitir-${solicitud.id}`}
-                onClick={() => manejarEmitirFactura(solicitud)}
-                disabled={procesandoId === solicitud.id}
-                className="btn-accion-inline btn-emitir-inline"
-              >
-                {procesandoId === solicitud.id ? (
-                  <>
-                    <div className="spinner-small"></div>
-                    <span>Emitiendo...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20,6 9,17 4,12"/>
-                    </svg>
-                    Emitir
-                  </>
+                {/* BLOQUE 2: NÚMERO DE GUÍA (solo si existe) */}
+                {solicitud.numeroGuia && (
+                  <div className="bloque-seccion guia-seccion">
+                    <div className="seccion-header">
+                      <div className="seccion-icono guia-icono">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="1" y="3" width="15" height="13"/>
+                          <path d="M16 8l2 0 0 8-8 0"/>
+                          <path d="M21 11.5l-5 5"/>
+                        </svg>
+                      </div>
+                      <span className="seccion-titulo">Guía Logística</span>
+                    </div>
+                    <div className="seccion-contenido">
+                      <div className="dato-fila">
+                        <span className="dato-label">Número de Guía:</span>
+                        <span className="dato-valor guia-numero">{solicitud.numeroGuia}</span>
+                      </div>
+                    </div>
+                  </div>
                 )}
-              </button>
-              
-              <button
-                key={`cancelar-${solicitud.id}`}
-                onClick={() => manejarCancelarSolicitud(solicitud)}
-                disabled={procesandoId === solicitud.id}
-                className="btn-accion-inline btn-cancelar-inline"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-                Cancelar
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* COMENTARIO DE CANCELACIÓN - COMPLETAMENTE SEPARADO ABAJO */}
-      {solicitud.estado === 'cancelada' && solicitud.comentarioCancelacion && (
-        <div className="comentario-cancelacion-separado">
-          <div className="comentario-header">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            <span className="comentario-titulo">Motivo de cancelación:</span>
+                {/* BLOQUE 3: PRODUCTOS */}
+                <div className="bloque-seccion productos-seccion">
+                  <div className="seccion-header">
+                    <div className="seccion-icono productos-icono">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                      </svg>
+                    </div>
+                    <span className="seccion-titulo">
+                      Productos {solicitud.productos && solicitud.productos.length > 0 ? `(${solicitud.productos.length})` : '(1)'}
+                    </span>
+                  </div>
+                  <div className="seccion-contenido">
+                    
+                    {/* MOSTRAR MÚLTIPLES PRODUCTOS SI EXISTEN */}
+                    {solicitud.productos && solicitud.productos.length > 0 ? (
+                      solicitud.productos.map((producto, prodIndex) => (
+                        <div key={prodIndex} className="producto-item-nueva">
+                          <div className="producto-numero-badge">#{prodIndex + 1}</div>
+                          <div className="producto-detalles">
+                            <div className="producto-nombre">{producto.nombre}</div>
+                            <div className="producto-info-grid">
+                              <div className="producto-info-item">
+                                <span className="info-label">Cantidad:</span>
+                                <span className="info-valor">{producto.cantidad}</span>
+                              </div>
+                              <div className="producto-info-item">
+                                <span className="info-label">Precio Unit.:</span>
+                                <span className="info-valor">{formatearMontoConSimbolo(producto.precioUnitario)}</span>
+                              </div>
+                              <div className="producto-info-item subtotal-item">
+                                <span className="info-label">Subtotal:</span>
+                                <span className="info-valor subtotal-valor">{formatearMontoConSimbolo(producto.subtotal)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      /* PRODUCTO LEGACY (formato anterior) */
+                      <div className="producto-item-nueva">
+                        <div className="producto-numero-badge">#1</div>
+                        <div className="producto-detalles">
+                          <div className="producto-nombre">{solicitud.producto.nombre}</div>
+                          <div className="producto-info-grid">
+                            <div className="producto-info-item">
+                              <span className="info-label">Cantidad:</span>
+                              <span className="info-valor">1</span>
+                            </div>
+                            <div className="producto-info-item">
+                              <span className="info-label">Precio Unit.:</span>
+                              <span className="info-valor">{formatearMontoConSimbolo(solicitud.monto)}</span>
+                            </div>
+                            <div className="producto-info-item subtotal-item">
+                              <span className="info-label">Subtotal:</span>
+                              <span className="info-valor subtotal-valor">{formatearMontoConSimbolo(solicitud.monto)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* TOTAL GENERAL */}
+                    <div className="total-productos">
+                      <span className="total-label">Total General:</span>
+                      <span className="total-valor">{formatearMontoConSimbolo(solicitud.monto)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BLOQUE 4: FECHAS Y METADATOS */}
+                <div className="bloque-seccion fechas-seccion">
+                  <div className="seccion-header">
+                    <div className="seccion-icono fechas-icono">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12,6 12,12 16,14"/>
+                      </svg>
+                    </div>
+                    <span className="seccion-titulo">Fechas</span>
+                  </div>
+                  <div className="seccion-contenido">
+                    <div className="dato-fila">
+                      <span className="dato-label">Solicitud:</span>
+                      <span className="dato-valor">{formatearFechaHora(solicitud.fechaSolicitud)}</span>
+                    </div>
+                    {solicitud.fechaEmision && (
+                      <div className="dato-fila emitida">
+                        <span className="dato-label">Emitida:</span>
+                        <span className="dato-valor">{formatearFechaHora(solicitud.fechaEmision)}</span>
+                      </div>
+                    )}
+                    {solicitud.fechaCancelacion && (
+                      <div className="dato-fila cancelada">
+                        <span className="dato-label">Cancelada:</span>
+                        <span className="dato-valor">{formatearFechaHora(solicitud.fechaCancelacion)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* BLOQUE 5: BOTONES DE ACCIÓN */}
+                <div className="bloque-acciones">
+                  {solicitud.estado === 'pendiente' ? (
+                    <div className="acciones-pendiente">
+                      <button
+                        onClick={() => manejarEditarSolicitud(solicitud)}
+                        disabled={procesandoId === solicitud.id}
+                        className="btn-accion btn-editar"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        Editar
+                      </button>
+                      
+                      <button
+                        onClick={() => manejarEmitirFactura(solicitud)}
+                        disabled={procesandoId === solicitud.id}
+                        className="btn-accion btn-emitir"
+                      >
+                        {procesandoId === solicitud.id ? (
+                          <>
+                            <div className="spinner-btn"></div>
+                            Emitiendo...
+                          </>
+                        ) : (
+                          <>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20,6 9,17 4,12"/>
+                            </svg>
+                            Emitir
+                          </>
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => manejarCancelarSolicitud(solicitud)}
+                        disabled={procesandoId === solicitud.id}
+                        className="btn-accion btn-cancelar"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"/>
+                          <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="acciones-completada">
+                      <div className="estado-final">
+                        {obtenerIconoEstado(solicitud.estado)}
+                        <span>Solicitud {solicitud.estado}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* COMENTARIO DE CANCELACIÓN (si existe) */}
+                {solicitud.estado === 'cancelada' && solicitud.comentarioCancelacion && (
+                  <div className="comentario-cancelacion-nueva">
+                    <div className="comentario-header-nueva">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                      <span>Motivo de cancelación:</span>
+                    </div>
+                    <p className="comentario-texto-nueva">{solicitud.comentarioCancelacion}</p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-          <p className="comentario-texto-separado">{solicitud.comentarioCancelacion}</p>
-        </div>
-      )}
-    </div>
-  ))}
-</div>
         )}
       </div>
 
-      {/* NUEVO FORMULARIO MEJORADO */}
+      {/* FORMULARIO MEJORADO */}
       <FormularioSolicitudMejorado
         mostrar={mostrarFormulario}
         onCerrar={() => setMostrarFormulario(false)}
@@ -1025,17 +1126,6 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
           cargarDatos();
         }}
       />
-
-      {/* FORMULARIO ORIGINAL - COMENTADO COMO BACKUP
-      <FormularioSolicitud
-        mostrar={mostrarFormulario}
-        onCerrar={() => setMostrarFormulario(false)}
-        mostrarNotificacion={mostrarNotificacion}
-        onSolicitudCreada={() => {
-          cargarDatos();
-        }}
-      />
-      */}
 
       {/* Modal de confirmación para emitir */}
       <ModalConfirmacion
@@ -1086,690 +1176,789 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
         mostrarNotificacion={mostrarNotificacion}
       />
 
+      {/* CSS COMPLETO MEJORADO */}
       <style>{`
+      /* ===== ESTILOS COMPACTOS PARA SOLICITUDES - REDUCIDOS AL 30% ===== */
+
+      .solicitudes-container {
+        padding: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        background: #f8fafc;
+        min-height: 100vh;
+      }
+
+      .solicitudes-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .solicitudes-header h2 {
+        color: #1f2937;
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+      }
+
+      .solicitudes-subtitle {
+        color: #6b7280;
+        margin: 0.15rem 0 0 0;
+        font-size: 0.9rem;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 0.75rem;
+      }
+
+      .btn-refrescar, .btn-descargar-csv {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+      }
+
+      .btn-refrescar {
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      .btn-nueva-solicitud {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+        font-size: 0.85rem;
+      }
+
+      .btn-descargar-csv {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border: none;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.25);
+      }
+
+      .filtros-container {
+        background: white;
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        border: 1px solid #e5e7eb;
+      }
+
+      .filtros-grupo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 160px;
+      }
+
+      .filtros-grupo label {
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.85rem;
+      }
+
+      .filtro-select {
+        padding: 0.4rem 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: white;
+        color: #374151;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: border-color 0.2s;
+      }
+
+      .resumen-filtros {
+        color: #6b7280;
+        font-size: 0.8rem;
+      }
+
+      .solicitudes-lista {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+      }
+
+      .solicitudes-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      /* ===== TARJETA PRINCIPAL - ULTRA COMPACTA CON COLORES DE ESTADO ===== */
+      .solicitud-card-nueva {
+        border-radius: 12px;
+        border: 2px solid;
+        padding: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+      }
+
+      .solicitud-card-nueva:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-1px);
+      }
+
+      /* COLORES DE FONDO SEGÚN ESTADO */
+      .solicitud-card-nueva.estado-pendiente {
+        background: linear-gradient(135deg, #fed7aa, #fdba74);
+        border-color: #ea580c;
+      }
+
+      .solicitud-card-nueva.estado-emitida {
+        background: linear-gradient(135deg, #d1fae5, #bbf7d0);
+        border-color: #10b981;
+      }
+
+      .solicitud-card-nueva.estado-cancelada {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        border-color: #ef4444;
+      }
+
+      /* Línea de estado lateral más prominente */
+      .solicitud-card-nueva::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        transition: all 0.3s ease;
+      }
+
+      .solicitud-card-nueva.estado-pendiente::before {
+        background: linear-gradient(180deg, #ea580c, #c2410c);
+      }
+
+      .solicitud-card-nueva.estado-emitida::before {
+        background: linear-gradient(180deg, #10b981, #059669);
+      }
+
+      .solicitud-card-nueva.estado-cancelada::before {
+        background: linear-gradient(180deg, #ef4444, #dc2626);
+      }
+
+      /* ===== HEADER MÁXIMAMENTE COMPACTO ===== */
+      .solicitud-header-nueva {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.35rem 0.6rem;
+        background: rgba(255, 255, 255, 0.7);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+      }
+
+      .numero-solicitud-nueva {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .numero-icono {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+      }
+
+      .numero-texto {
+        font-size: 0.85rem;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .header-derecha {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .monto-principal {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #059669;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      /* ===== BADGES DE ESTADO COMPACTOS ===== */
+      .estado-badge-nueva {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      .estado-badge-nueva.estado-pendiente {
+        background: linear-gradient(135deg, #fed7aa, #fdba74);
+        color: #9a3412;
+        border: 1px solid #ea580c;
+      }
+
+      .estado-badge-nueva.estado-emitida {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #065f46;
+        border: 1px solid #10b981;
+      }
+
+      .estado-badge-nueva.estado-cancelada {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #991b1b;
+        border: 1px solid #ef4444;
+      }
+
+      /* ===== BLOQUES DE SECCIÓN MÁXIMAMENTE COMPACTOS ===== */
+      .bloque-seccion {
+        padding: 0.25rem 0.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .bloque-seccion:last-of-type {
+        border-bottom: none;
+      }
+
+      .bloque-seccion:hover {
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .seccion-header {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.15rem;
+      }
+
+      .seccion-icono {
+        width: 26px;
+        height: 26px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .cliente-icono {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      }
+
+      .guia-icono {
+        background: linear-gradient(135deg, #ea580c, #c2410c);
+      }
+
+      .productos-icono {
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+
+      .fechas-icono {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+      }
+
+      .seccion-titulo {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+      }
+
+      .seccion-contenido {
+        margin-left: 1.3rem;
+      }
+
+      /* ===== DATOS EN FILAS MÁXIMAMENTE COMPACTOS ===== */
+      .dato-fila {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.1rem;
+        padding: 0.02rem 0;
+        border-bottom: 1px dotted rgba(0, 0, 0, 0.1);
+      }
+
+      .dato-fila:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+      }
+
+      .dato-label {
+        font-size: 0.85rem;
+        color: #6b7280;
+        font-weight: 500;
+        min-width: 80px;
+      }
+
+      .dato-valor {
+        font-size: 0.85rem;
+        color: #374151;
+        font-weight: 600;
+        text-align: right;
+        flex: 1;
+      }
+
+      .empresa-nombre {
+        color: #1f2937;
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      .guia-numero {
+        color: #c2410c;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        background: #fed7aa;
+        padding: 0.15rem 0.3rem;
+        border-radius: 4px;
+        border: 1px solid #ea580c;
+        font-size: 0.8rem;
+      }
+
+      /* ===== PRODUCTOS MÁXIMAMENTE COMPACTOS ===== */
+      .producto-item-nueva {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-bottom: 0.15rem;
+        padding: 0.25rem;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      .producto-item-nueva:hover {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(0, 0, 0, 0.2);
+        transform: translateX(2px);
+      }
+
+      .producto-item-nueva:last-child {
+        margin-bottom: 0;
+      }
+
+      .producto-numero-badge {
+        width: 18px;
+        height: 18px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        box-shadow: 0 1px 2px rgba(16, 185, 129, 0.3);
+      }
+
+      .producto-detalles {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+      }
+
+      .producto-nombre {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1f2937;
+        min-width: 100px;
+        flex-shrink: 0;
+      }
+
+      .producto-info-horizontal {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        flex: 1;
+      }
+
+      .producto-info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        text-align: center;
+      }
+
+      .info-label {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .info-valor {
+        font-size: 0.85rem;
+        color: #374151;
+        font-weight: 600;
+      }
+
+      .subtotal-valor {
+        color: #059669;
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      /* ===== TOTAL PRODUCTOS MÁXIMAMENTE COMPACTO ===== */
+      .total-productos {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.15rem;
+        padding: 0.25rem;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 4px;
+        border: 2px solid #10b981;
+      }
+
+      .total-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #065f46;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+      }
+
+      .total-valor {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #047857;
+      }
+
+      /* ===== FECHAS CON COLORES ===== */
+      .dato-fila.emitida .dato-valor {
+        color: #059669;
+        font-weight: 700;
+      }
+
+      .dato-fila.cancelada .dato-valor {
+        color: #dc2626;
+        font-weight: 700;
+      }
+
+      /* ===== BLOQUE DE ACCIONES MÁXIMAMENTE COMPACTO ===== */
+      .bloque-acciones {
+        padding: 0.25rem 0.5rem;
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      .acciones-pendiente {
+        display: flex;
+        gap: 0.25rem;
+        justify-content: center;
+      }
+
+      .acciones-completada {
+        display: flex;
+        justify-content: center;
+      }
+
+      .estado-final {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.25rem 0.6rem;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        font-weight: 600;
+        color: #6b7280;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        font-size: 0.85rem;
+      }
+
+      /* ===== BOTONES DE ACCIÓN COMPACTOS ===== */
+      .btn-accion {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-accion:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+
+      .btn-accion:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-editar {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: white;
+      }
+
+      .btn-emitir {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+      }
+
+      .btn-cancelar {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+      }
+
+      /* ===== SPINNERS COMPACTOS ===== */
+      .spinner-btn {
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .spinner-small {
+        width: 10px;
+        height: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      /* ===== COMENTARIO DE CANCELACIÓN MÁXIMAMENTE COMPACTO ===== */
+      .comentario-cancelacion-nueva {
+        margin: 0.25rem;
+        margin-top: 0;
+        padding: 0.25rem;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 4px;
+        border-left: 3px solid #dc2626;
+        box-shadow: 0 1px 2px rgba(239, 68, 68, 0.1);
+      }
+
+      .comentario-header-nueva {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        margin-bottom: 0.1rem;
+      }
+
+      .comentario-header-nueva span {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #991b1b;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+      }
+
+      .comentario-texto-nueva {
+        font-size: 0.8rem;
+        color: #7f1d1d;
+        margin: 0;
+        line-height: 1.4;
+        font-style: italic;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 0.2rem;
+        border-radius: 3px;
+      }
+
+      /* ===== ESTADOS DE CARGA ===== */
+      .loading-state,
+      .error-state {
+        text-align: center;
+        padding: 1.5rem;
+      }
+
+      .loading-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #e5e7eb;
+        border-top: 3px solid #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 0.75rem;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: #6b7280;
+      }
+
+      .empty-state p {
+        font-size: 1rem;
+        margin-bottom: 0.4rem;
+        color: #374151;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* ===== RESPONSIVE DESIGN COMPACTO ===== */
+
+      @media (max-width: 968px) {
+        .filtros-container {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.75rem;
+          padding: 0.75rem;
+        }
+        
+        .filtros-grupo {
+          min-width: auto;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.3rem;
+        }
+
+        .solicitud-header-nueva {
+          flex-direction: column;
+          gap: 0.6rem;
+          align-items: stretch;
+          padding: 0.6rem 0.75rem;
+        }
+
+        .header-derecha {
+          justify-content: space-between;
+        }
+
+        .producto-info-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+        }
+
+        .producto-info-horizontal {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+        }
+
+        .producto-detalles {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.3rem;
+        }
+
+        .acciones-pendiente {
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+      }
+
+      @media (max-width: 768px) {
         .solicitudes-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
-.solicitudes-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.solicitudes-header h2 {
-  color: #1f2937;
-  margin: 0;
-  font-size: 1.875rem;
-  font-weight: 700;
-}
-
-.solicitudes-subtitle {
-  color: #6b7280;
-  margin: 0.25rem 0 0 0;
-  font-size: 1rem;
-}
-
-.header-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-.btn-refrescar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: white;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.btn-refrescar:hover:not(:disabled) {
-  background: #f9fafb;
-  border-color: #9ca3af;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.btn-refrescar:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-nueva-solicitud {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
-}
-
-.btn-nueva-solicitud:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
-}
-
-.btn-descargar-csv {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.25);
-}
-
-.btn-descargar-csv:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
-}
-
-.btn-descargar-csv:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.filtros-container {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  margin-bottom: 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  border: 1px solid #e5e7eb;
-}
-
-.filtros-grupo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.filtros-grupo label {
-  font-weight: 500;
-  color: #374151;
-}
-
-.filtro-select {
-  padding: 0.5rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  background: white;
-  color: #374151;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.filtro-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.resumen-filtros {
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.solicitudes-lista {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
-  border: 1px solid #e5e7eb;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: #6b7280;
-}
-
-.empty-icon {
-  margin: 0 auto 1rem;
-}
-
-.empty-state p {
-  font-size: 1.125rem;
-  margin-bottom: 0.5rem;
-  color: #374151;
-}
-
-/* DISEÑO PRINCIPAL - LISTA VERTICAL */
-.solicitudes-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.solicitud-card {
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: white;
-  transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
-  gap: 0;
-}
-
-/* Línea lateral dinámica según estado */
-.solicitud-card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-}
-
-.solicitud-card.estado-pendiente::before {
-  background: linear-gradient(180deg, #f59e0b, #d97706);
-}
-
-.solicitud-card.estado-emitida::before {
-  background: linear-gradient(180deg, #10b981, #059669);
-}
-
-.solicitud-card.estado-cancelada::before {
-  background: linear-gradient(180deg, #ef4444, #dc2626);
-}
-
-.solicitud-card:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-  transform: translateY(-1px);
-}
-
-/* Contenido principal de la tarjeta */
-.solicitud-contenido-completo {
-  display: flex;
-  align-items: stretch;
-  width: 100%;
-  min-height: 80px;
-}
-
-/* Número de solicitud circular */
-.solicitud-numero {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.875rem;
-  margin-right: 1.5rem;
-  flex-shrink: 0;
-  align-self: center;
-}
-
-/* CONTENIDO PRINCIPAL REORGANIZADO */
-.solicitud-contenido-principal {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  flex: 1;
-  min-width: 0;
-}
-
-/* Información del cliente - más espacio */
-.solicitud-cliente-info {
-  flex: 2;
-  min-width: 200px;
-}
-
-.cliente-nombre-principal {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 0.25rem 0;
-  line-height: 1.3;
-}
-
-.cliente-ruc-secundario {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-}
-  .cliente-email-secundario {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0.25rem 0 0 0;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-/* Actualizar la información del cliente para más espacio */
-.solicitud-cliente-info {
-  flex: 2.5; /* Aumentar de 2 a 2.5 para más espacio */
-  min-width: 220px; /* Aumentar de 200px a 220px */
-}
-
-/* Ajustar filtros para que se vean mejor */
-.filtros-container {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  margin-bottom: 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1.5rem; /* Aumentar gap de 1rem a 1.5rem */
-  border: 1px solid #e5e7eb;
-}
-
-.filtros-grupo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 180px; /* Asegurar ancho mínimo */
-}
-
-/* Responsive mejorado para filtros */
-@media (max-width: 968px) {
-  .filtros-container {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  
-  .filtros-grupo {
-    min-width: auto;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
-  
-  .filtros-grupo label {
-    text-align: center;
-  }
-}
-
-/* Información del producto */
-.solicitud-producto-info {
-  flex: 2;
-  min-width: 150px;
-}
-
-.producto-nombre {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin: 0 0 0.25rem 0;
-}
-
-.producto-fecha {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-/* SECCIÓN DERECHA REORGANIZADA */
-.solicitud-info-derecha {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.75rem;
-  min-width: 250px;
-  flex-shrink: 0;
-}
-
-/* Fila superior: Estado y Monto */
-.solicitud-fila-superior {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  justify-content: flex-end;
-}
-
-.solicitud-estado-badge {
-  flex-shrink: 0;
-}
-
-.solicitud-monto-destacado {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #059669;
-  flex-shrink: 0;
-}
-
-/* Fila inferior: Fechas adicionales */
-.solicitud-fechas-adicionales {
-  font-size: 0.75rem;
-  color: #6b7280;
-  text-align: right;
-  width: 100%;
-}
-
-.fecha-emision {
-  color: #059669;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.25rem;
-  margin-bottom: 0.25rem;
-}
-
-.fecha-cancelacion {
-  color: #dc2626;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.25rem;
-}
-
-/* Badge de estado */
-.estado-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.estado-pendiente {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fbbf24;
-}
-
-.estado-emitida {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #10b981;
-}
-
-.estado-cancelada {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #ef4444;
-}
-
-/* Acciones solo para pendientes */
-.solicitud-acciones-inline {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.btn-accion-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 0.75rem;
-  transition: all 0.2s;
-  min-width: 70px;
-  justify-content: center;
-}
-
-.btn-editar-inline {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  color: white;
-}
-
-.btn-editar-inline:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(139, 92, 246, 0.3);
-}
-
-.btn-emitir-inline {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-}
-
-.btn-emitir-inline:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
-}
-
-.btn-cancelar-inline {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-}
-
-.btn-cancelar-inline:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3);
-}
-
-.btn-accion-inline:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.spinner-small {
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* COMENTARIO DE CANCELACIÓN - COMPLETAMENTE SEPARADO */
-.comentario-cancelacion-separado {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, #fef2f2, #fee2e2);
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  border-top: 3px solid #dc2626;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.comentario-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.comentario-titulo {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #991b1b;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-}
-
-.comentario-texto-separado {
-  font-size: 0.875rem;
-  color: #7f1d1d;
-  margin: 0;
-  line-height: 1.5;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 6px;
-  border-left: 3px solid #dc2626;
-  font-style: italic;
-}
-
-/* ELIMINAR estilos antiguos que no se usan */
-.comentario-cancelacion-inline {
-  display: none;
-}
-
-.comentario-label-inline {
-  display: none;
-}
-
-.comentario-texto-inline {
-  display: none;
-}
-
-.loading-state,
-.error-state {
-  text-align: center;
-  padding: 2rem;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
-}
-
-.modal-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 9999 !important;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@media (max-width: 968px) {
-  .solicitud-contenido-completo {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .solicitud-numero {
-    align-self: center;
-    margin-right: 0;
-    margin-bottom: 0.5rem;
-  }
-
-  .solicitud-contenido-principal {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .solicitud-cliente-info,
-  .solicitud-producto-info {
-    text-align: center;
-    min-width: auto;
-  }
-
-  .solicitud-info-derecha {
-    align-items: center;
-    min-width: auto;
-  }
-
-  .solicitud-fila-superior {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .solicitud-fechas-adicionales {
-    text-align: center;
-  }
-
-  .fecha-emision,
-  .fecha-cancelacion {
-    justify-content: center;
-  }
-
-  .comentario-cancelacion-separado {
-    margin-top: 0.75rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .solicitudes-container {
-    padding: 1rem;
-  }
-
-  .solicitudes-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .header-actions {
-    flex-direction: column;
-  }
-
-  .filtros-container {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .solicitud-card::before {
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: auto;
-    width: auto;
-    height: 4px;
-  }
-
-  .solicitud-acciones-inline {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .btn-accion-inline {
-    min-width: auto;
-  }
-}
+          padding: 0.75rem;
+        }
+
+        .solicitudes-header {
+          flex-direction: column;
+          gap: 0.75rem;
+          align-items: stretch;
+        }
+
+        .header-actions {
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .numero-solicitud-nueva {
+          flex-direction: column;
+          text-align: center;
+          gap: 0.3rem;
+        }
+
+        .seccion-contenido {
+          margin-left: 0;
+        }
+
+        .dato-fila {
+          flex-direction: column;
+          align-items: stretch;
+          text-align: left;
+          padding: 0.2rem 0;
+        }
+
+        .dato-valor {
+          text-align: left;
+          margin-top: 0.15rem;
+        }
+
+        .producto-item-nueva {
+          flex-direction: column;
+          align-items: stretch;
+          padding: 0.5rem;
+          gap: 0.4rem;
+        }
+
+        .total-productos {
+          flex-direction: column;
+          gap: 0.3rem;
+          text-align: center;
+          padding: 0.5rem;
+        }
+
+        .bloque-seccion {
+          padding: 0.6rem 0.75rem;
+        }
+
+        .bloque-acciones {
+          padding: 0.6rem 0.75rem;
+        }
+      }
       `}</style>
     </div>
   );

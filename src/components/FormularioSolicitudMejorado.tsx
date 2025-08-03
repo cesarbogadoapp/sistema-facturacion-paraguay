@@ -53,6 +53,21 @@ const FormularioSolicitudMejorado: React.FC<FormularioSolicitudMejoradoProps> = 
   const [mostrandoSugerencias, setMostrandoSugerencias] = useState<boolean>(false);
   const [mostrarGuia, setMostrarGuia] = useState<boolean>(false);
 
+  // ESTADO ADICIONAL PARA FORZAR RE-RENDER EN CHROME
+  const [forceUpdate, setForceUpdate] = useState<number>(0);
+
+  // FUNCIÓN HELPER PARA DETECTAR CHROME
+  const isChrome = () => {
+    return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+  };
+
+  // FUNCIÓN PARA FORZAR UPDATE EN CHROME
+  const triggerForceUpdate = () => {
+    if (isChrome()) {
+      setForceUpdate(prev => prev + 1);
+    }
+  };
+
   // Cargar datos iniciales
   useEffect(() => {
     if (mostrar) {
@@ -111,46 +126,75 @@ const FormularioSolicitudMejorado: React.FC<FormularioSolicitudMejoradoProps> = 
     }
   };
 
-// Actualizar producto - CON DEBUG
-const actualizarProducto = (index: number, campo: keyof ProductoSolicitud, valor: any) => {
-  console.log('🔧 Actualizando producto:', { index, campo, valor });
-  
-  setDatosFormulario(prev => {
-    const nuevosProductos = [...prev.productos];
-    nuevosProductos[index] = { ...nuevosProductos[index], [campo]: valor };
+  // Actualizar producto - SOLUCIÓN AGRESIVA PARA CHROME
+  const actualizarProducto = (index: number, campo: keyof ProductoSolicitud, valor: any) => {
+    console.log('🔧 Actualizando producto Chrome-safe:', { index, campo, valor });
     
-    // Si cambia el producto, actualizar nombre y precio
-    if (campo === 'productoId') {
-      const producto = productos.find(p => p.id === valor);
-      if (producto) {
-        nuevosProductos[index].nombre = producto.nombre;
-        nuevosProductos[index].precioUnitario = 0;
-        nuevosProductos[index].subtotal = 0;
+    // MÉTODO 1: Actualización inmediata
+    setDatosFormulario(prev => {
+      const nuevosProductos = JSON.parse(JSON.stringify(prev.productos)); // Deep clone
+      nuevosProductos[index] = { ...nuevosProductos[index], [campo]: valor };
+      
+      // Si cambia el producto, limpiar precio y subtotal
+      if (campo === 'productoId') {
+        const producto = productos.find(p => p.id === valor);
+        if (producto) {
+          nuevosProductos[index].nombre = producto.nombre;
+          nuevosProductos[index].precioUnitario = 0;
+          nuevosProductos[index].subtotal = 0;
+        }
       }
+      
+      // CALCULAR SUBTOTAL INMEDIATAMENTE
+      const cantidad = parseInt(String(nuevosProductos[index].cantidad)) || 0;
+      const precio = parseInt(String(nuevosProductos[index].precioUnitario)) || 0;
+      nuevosProductos[index].subtotal = cantidad * precio;
+      
+      console.log('📊 Producto actualizado inmediatamente:', nuevosProductos[index]);
+      return { ...prev, productos: nuevosProductos };
+    });
+    
+    // MÉTODO 2: Forzar actualización con requestAnimationFrame (Chrome específico)
+    if (isChrome()) {
+      requestAnimationFrame(() => {
+        setDatosFormulario(current => {
+          const productosActualizados = [...current.productos];
+          const cantidad = parseInt(String(productosActualizados[index].cantidad)) || 0;
+          const precio = parseInt(String(productosActualizados[index].precioUnitario)) || 0;
+          productosActualizados[index].subtotal = cantidad * precio;
+          
+          console.log('🎯 Chrome requestAnimationFrame update:', productosActualizados[index]);
+          triggerForceUpdate();
+          return { ...current, productos: productosActualizados };
+        });
+      });
     }
     
-    // SIEMPRE calcular subtotal después de cualquier cambio
-    const cantidad = nuevosProductos[index].cantidad || 0;
-    const precio = nuevosProductos[index].precioUnitario || 0;
-    nuevosProductos[index].subtotal = cantidad * precio;
-    
-    console.log('📊 Producto actualizado:', nuevosProductos[index]);
-    console.log('💰 Total calculado:', nuevosProductos.reduce((sum, p) => sum + p.subtotal, 0));
-    
-    return { ...prev, productos: nuevosProductos };
-  });
-};
+    // MÉTODO 3: Timeout como fallback final
+    setTimeout(() => {
+      setDatosFormulario(current => {
+        const productosFinales = [...current.productos];
+        const cantidad = parseInt(String(productosFinales[index].cantidad)) || 0;
+        const precio = parseInt(String(productosFinales[index].precioUnitario)) || 0;
+        productosFinales[index].subtotal = cantidad * precio;
+        
+        console.log('⏰ Timeout fallback update:', productosFinales[index]);
+        return { ...current, productos: productosFinales };
+      });
+    }, 100);
+  };
 
-// Calcular total - CON DEBUG
-const calcularTotal = (): number => {
-  const total = datosFormulario.productos.reduce((total, prod) => {
-    console.log('🔢 Producto en total:', prod.nombre, 'Subtotal:', prod.subtotal);
-    return total + (prod.subtotal || 0);
-  }, 0);
-  
-  console.log('💰 Total final:', total);
-  return total;
-};
+  // Calcular total - CORREGIDO PARA CHROME
+  const calcularTotal = (): number => {
+    const total = datosFormulario.productos.reduce((total, prod) => {
+      const subtotal = Number(prod.subtotal) || 0;
+      console.log('🔢 Producto en total:', prod.nombre, 'Subtotal:', subtotal);
+      return total + subtotal;
+    }, 0);
+    
+    console.log('💰 Total final:', total);
+    return Number(total) || 0;
+  };
 
   // Buscar clientes
   const buscarClientesCoincidentes = (tipoBusqueda: string, valorBusqueda: string): void => {
@@ -256,7 +300,7 @@ const calcularTotal = (): number => {
           nombre: producto?.nombre || primerProducto.nombre
         }
       };
-        console.log('📤 Datos a enviar:', datosSolicitud);
+      console.log('📤 Datos a enviar:', datosSolicitud);
       await crearSolicitud(datosSolicitud);
       
       mostrarNotificacion('Solicitud creada correctamente', 'success');
@@ -444,47 +488,120 @@ const calcularTotal = (): number => {
                       </select>
                     </div>
 
-                    {/* Cantidad */}
+                    {/* Cantidad - SOLUCIÓN CHROME */}
                     <div className="grupo-campo">
                       <label className="etiqueta-campo">Cantidad</label>
                       <input
                         type="number"
                         min="1"
+                        step="1"
                         value={producto.cantidad}
-                        onChange={(e) => actualizarProducto(index, 'cantidad', parseInt(e.target.value) || 1)}
+                        onChange={(e) => {
+                          const nuevaCantidad = parseInt(e.target.value) || 1;
+                          console.log('📦 Cantidad cambiada:', nuevaCantidad);
+                          
+                          // Actualizar cantidad
+                          actualizarProducto(index, 'cantidad', nuevaCantidad);
+                          
+                          // CHROME FIX: Recalcular subtotal inmediatamente
+                          setTimeout(() => {
+                            const precioActual = parseInt(String(producto.precioUnitario)) || 0;
+                            const nuevoSubtotal = nuevaCantidad * precioActual;
+                            console.log('💰 Recálculo cantidad Chrome:', { nuevaCantidad, precioActual, nuevoSubtotal });
+                            
+                            setDatosFormulario(prev => {
+                              const productosUpdate = [...prev.productos];
+                              productosUpdate[index].cantidad = nuevaCantidad;
+                              productosUpdate[index].subtotal = nuevoSubtotal;
+                              return { ...prev, productos: productosUpdate };
+                            });
+                            
+                            triggerForceUpdate();
+                          }, 10);
+                        }}
+                        onBlur={(e) => {
+                          // ÚLTIMO RECURSO: Forzar recálculo en blur
+                          const cantidad = parseInt(e.target.value) || 1;
+                          const precio = parseInt(String(producto.precioUnitario)) || 0;
+                          const subtotal = cantidad * precio;
+                          
+                          console.log('🎯 Blur recálculo final:', { cantidad, precio, subtotal });
+                          
+                          setDatosFormulario(prev => {
+                            const productos = [...prev.productos];
+                            productos[index] = {
+                              ...productos[index],
+                              cantidad: cantidad,
+                              subtotal: subtotal
+                            };
+                            return { ...prev, productos };
+                          });
+                        }}
                         disabled={cargando}
                         className="campo-entrada"
                       />
                     </div>
 
-                {/* Precio Unitario */}
-                <div className="grupo-campo">
-                    <label className="etiqueta-campo">Precio Unitario (Gs.)</label>
-                    <input
+                    {/* Precio Unitario - SOLUCIÓN CHROME */}
+                    <div className="grupo-campo">
+                      <label className="etiqueta-campo">Precio Unitario (Gs.)</label>
+                      <input
                         type="text"
                         value={producto.precioUnitario ? formatearMonto(producto.precioUnitario.toString()) : ''}
                         onChange={(e) => {
-                            const numero = e.target.value.replace(/[^\d]/g, '');
-                            const precio = parseInt(numero) || 0;
-                            actualizarProducto(index, 'precioUnitario', precio);
+                          const numeroLimpio = e.target.value.replace(/[^\d]/g, '');
+                          const nuevoPrecio = parseInt(numeroLimpio) || 0;
+                          console.log('💵 Precio cambiado:', nuevoPrecio);
+                          
+                          // Actualizar precio
+                          actualizarProducto(index, 'precioUnitario', nuevoPrecio);
+                          
+                          // CHROME FIX: Recalcular subtotal inmediatamente
+                          setTimeout(() => {
+                            const cantidadActual = parseInt(String(producto.cantidad)) || 1;
+                            const nuevoSubtotal = cantidadActual * nuevoPrecio;
+                            console.log('💰 Recálculo precio Chrome:', { cantidadActual, nuevoPrecio, nuevoSubtotal });
+                            
+                            setDatosFormulario(prev => {
+                              const productosUpdate = [...prev.productos];
+                              productosUpdate[index].precioUnitario = nuevoPrecio;
+                              productosUpdate[index].subtotal = nuevoSubtotal;
+                              return { ...prev, productos: productosUpdate };
+                            });
+                            
+                            triggerForceUpdate();
+                          }, 10);
                         }}
-                        onBlur={() => {
-                            // Forzar recálculo al perder foco
-                            const cantidad = producto.cantidad || 0;
-                            const precio = producto.precioUnitario || 0;
-                            actualizarProducto(index, 'subtotal', cantidad * precio);
+                        onBlur={(e) => {
+                          // ÚLTIMO RECURSO: Forzar recálculo en blur
+                          const numeroLimpio = e.target.value.replace(/[^\d]/g, '');
+                          const precio = parseInt(numeroLimpio) || 0;
+                          const cantidad = parseInt(String(producto.cantidad)) || 1;
+                          const subtotal = cantidad * precio;
+                          
+                          console.log('🎯 Blur precio final:', { precio, cantidad, subtotal });
+                          
+                          setDatosFormulario(prev => {
+                            const productos = [...prev.productos];
+                            productos[index] = {
+                              ...productos[index],
+                              precioUnitario: precio,
+                              subtotal: subtotal
+                            };
+                            return { ...prev, productos };
+                          });
                         }}
                         placeholder="Ej: 50000"
                         disabled={cargando}
                         className="campo-entrada"
-                     />
+                      />
                     </div>
 
-                    {/* Subtotal */}
+                    {/* Subtotal - LIMPIO SIN DEBUG */}
                     <div className="grupo-campo">
                       <label className="etiqueta-campo">Subtotal</label>
-                      <div className="subtotal-display">
-                        Gs. {formatearMonto(producto.subtotal.toString())}
+                      <div className="subtotal-display" key={`subtotal-${index}-${forceUpdate}`}>
+                        Gs. {formatearMonto((producto.subtotal || 0).toString())}
                       </div>
                     </div>
                   </div>
@@ -493,8 +610,8 @@ const calcularTotal = (): number => {
 
               {errores.productos && <span className="mensaje-error">{errores.productos}</span>}
 
-              {/* Total General */}
-              <div className="total-general">
+              {/* Total General - LIMPIO SIN DEBUG */}
+              <div className="total-general" key={`total-${forceUpdate}`}>
                 <strong>Total: Gs. {formatearMonto(calcularTotal().toString())}</strong>
               </div>
             </div>
@@ -969,6 +1086,33 @@ const calcularTotal = (): number => {
           .boton-secundario:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+          }
+
+          @media (max-width: 768px) {
+            .overlay-modal {
+              padding: 0.5rem;
+            }
+
+            .contenido-modal {
+              max-height: 95vh;
+            }
+
+            .encabezado-modal {
+              padding: 1rem;
+            }
+
+            .formulario-principal {
+              padding: 1rem;
+            }
+
+            .contenedor-botones {
+              flex-direction: column-reverse;
+            }
+
+            .boton-principal,
+            .boton-secundario {
+              width: 100%;
+            }
           }
         `}</style>
       </div>

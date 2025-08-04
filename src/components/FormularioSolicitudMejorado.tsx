@@ -1,5 +1,5 @@
-// src/components/FormularioSolicitudMejorado.tsx - CON MÚLTIPLES PRODUCTOS
-import React, { useState, useEffect } from 'react';
+// src/components/FormularioSolicitudMejorado.tsx - CON MÚLTIPLES PRODUCTOS Y CENTRADO AUTOMÁTICO
+import React, { useState, useEffect, useRef } from 'react';
 import { crearSolicitud, obtenerClientes, obtenerProductos } from '../services/database';
 import { validarRUC, formatearMonto } from '../utils';
 import { Cliente, Producto } from '../types/interfaces';
@@ -33,6 +33,9 @@ const FormularioSolicitudMejorado: React.FC<FormularioSolicitudMejoradoProps> = 
   mostrarNotificacion,
   onSolicitudCreada 
 }) => {
+  // ✨ REF PARA CENTRADO AUTOMÁTICO
+  const modalRef = useRef<HTMLDivElement>(null);
+
   // Estados principales
   const [datosFormulario, setDatosFormulario] = useState<DatosFormulario>({
     ruc: '',
@@ -56,6 +59,19 @@ const FormularioSolicitudMejorado: React.FC<FormularioSolicitudMejoradoProps> = 
   // ESTADO ADICIONAL PARA FORZAR RE-RENDER EN CHROME
   const [forceUpdate, setForceUpdate] = useState<number>(0);
 
+  // ✨ EFECTO PARA CENTRADO AUTOMÁTICO DEL MODAL
+  useEffect(() => {
+    if (mostrar) {
+      setTimeout(() => {
+        modalRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
+        });
+      }, 0);
+    }
+  }, [mostrar]);
+
   // FUNCIÓN HELPER PARA DETECTAR CHROME
   const isChrome = () => {
     return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
@@ -74,7 +90,7 @@ const FormularioSolicitudMejorado: React.FC<FormularioSolicitudMejoradoProps> = 
       cargarDatosIniciales();
     }
   }, [mostrar]);
-  
+
   const cargarDatosIniciales = async (): Promise<void> => {
     setCargandoData(true);
     try {
@@ -322,7 +338,11 @@ const FormularioSolicitudMejorado: React.FC<FormularioSolicitudMejoradoProps> = 
 
   return (
     <div className="overlay-modal" onClick={() => !cargando && onCerrar()}>
-      <div className="contenido-modal" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="contenido-modal" 
+        ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="encabezado-modal">
           <h2>Nueva Solicitud de Facturación</h2>
@@ -691,7 +711,7 @@ const FormularioSolicitudMejorado: React.FC<FormularioSolicitudMejoradoProps> = 
         )}
 
         <style>{`
-.header-productos {
+          .header-productos {
             display: flex;
             justify-content: space-between;
             align-items: center;

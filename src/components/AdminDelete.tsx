@@ -1,5 +1,5 @@
-// src/components/AdminDelete.tsx - SÚPER BOTÓN ELIMINADOR COMPLETO
-import React, { useState, useEffect } from 'react';
+// src/components/AdminDelete.tsx - SÚPER BOTÓN ELIMINADOR COMPLETO CON CENTRADO AUTOMÁTICO
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   obtenerSolicitudes,
   obtenerClientes,
@@ -37,6 +37,10 @@ const AdminDelete: React.FC<AdminDeleteProps> = ({
   onCerrar, 
   mostrarNotificacion 
 }) => {
+  // ✨ REFS PARA CENTRADO AUTOMÁTICO
+  const modalPrincipalRef = useRef<HTMLDivElement>(null);
+  const modalConfirmacionRef = useRef<HTMLDivElement>(null);
+
   const [registros, setRegistros] = useState<RegistroUnificado[]>([]);
   const [registrosFiltrados, setRegistrosFiltrados] = useState<RegistroUnificado[]>([]);
   const [cargando, setCargando] = useState<boolean>(false);
@@ -47,6 +51,32 @@ const AdminDelete: React.FC<AdminDeleteProps> = ({
   // Modal de confirmación
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState<boolean>(false);
   const [registroAEliminar, setRegistroAEliminar] = useState<RegistroUnificado | null>(null);
+
+  // ✨ EFECTO PARA CENTRADO AUTOMÁTICO DEL MODAL PRINCIPAL
+  useEffect(() => {
+    if (mostrar) {
+      setTimeout(() => {
+        modalPrincipalRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
+        });
+      }, 0);
+    }
+  }, [mostrar]);
+
+  // ✨ EFECTO PARA CENTRADO AUTOMÁTICO DEL MODAL DE CONFIRMACIÓN
+  useEffect(() => {
+    if (mostrarConfirmacion) {
+      setTimeout(() => {
+        modalConfirmacionRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
+        });
+      }, 0);
+    }
+  }, [mostrarConfirmacion]);
 
   useEffect(() => {
     if (mostrar) {
@@ -230,7 +260,7 @@ const AdminDelete: React.FC<AdminDeleteProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content modal-eliminar">
+      <div className="modal-content modal-eliminar" ref={modalPrincipalRef}>
         {/* Header */}
         <div className="modal-header">
           <div className="header-content">
@@ -387,10 +417,10 @@ const AdminDelete: React.FC<AdminDeleteProps> = ({
           )}
         </div>
 
-        {/* Modal de confirmación */}
+        {/* ✨ Modal de confirmación CON CENTRADO AUTOMÁTICO */}
         {mostrarConfirmacion && registroAEliminar && (
           <div className="modal-overlay-confirmacion">
-            <div className="modal-confirmacion">
+            <div className="modal-confirmacion" ref={modalConfirmacionRef}>
               <div className="confirmacion-header">
                 <div className="confirmacion-icon">
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

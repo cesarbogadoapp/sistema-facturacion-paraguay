@@ -1,5 +1,5 @@
-// ModalEdicionCompleto.tsx - CON TODOS LOS CAMPOS DEL FORMULARIO MEJORADO
-import React, { useState, useEffect } from 'react';
+// ModalEdicionCompleto.tsx - CON TODOS LOS CAMPOS DEL FORMULARIO MEJORADO Y CENTRADO AUTOMÁTICO
+import React, { useState, useEffect, useRef } from 'react';
 import { actualizarSolicitud } from '../services/database';
 import { validarRUC, formatearMonto } from '../utils';
 import { Solicitud, Cliente, Producto, ProductoSolicitud } from '../types/interfaces';
@@ -33,6 +33,9 @@ const ModalEdicionCompleto: React.FC<ModalEdicionCompletoProps> = ({
   productos,
   mostrarNotificacion
 }) => {
+  // ✨ REF PARA CENTRADO AUTOMÁTICO
+  const modalRef = useRef<HTMLDivElement>(null);
+
   const [datosEdicion, setDatosEdicion] = useState<DatosEdicion>({
     ruc: '',
     razonSocial: '',
@@ -46,6 +49,20 @@ const ModalEdicionCompleto: React.FC<ModalEdicionCompletoProps> = ({
   const [mostrandoSugerencias, setMostrandoSugerencias] = useState<boolean>(false);
   const [mostrarGuia, setMostrarGuia] = useState<boolean>(false);
   const [forceUpdate, setForceUpdate] = useState<number>(0);
+
+  // ✨ EFECTO PARA CENTRADO AUTOMÁTICO DEL MODAL
+  useEffect(() => {
+    if (mostrar) {
+      // Usar setTimeout para asegurar que el DOM esté renderizado
+      setTimeout(() => {
+        modalRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
+        });
+      }, 0);
+    }
+  }, [mostrar]);
 
   // Cargar datos de la solicitud al abrir el modal
   useEffect(() => {
@@ -258,7 +275,11 @@ const ModalEdicionCompleto: React.FC<ModalEdicionCompletoProps> = ({
 
   return (
     <div className="overlay-modal-edicion" onClick={() => !cargando && onCancelar()}>
-      <div className="contenido-modal-edicion" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="contenido-modal-edicion" 
+        ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Header */}
         <div className="encabezado-modal-edicion">

@@ -1,5 +1,5 @@
 // src/components/Solicitudes.tsx - VERSIÓN MEJORADA COMPLETA
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { actualizarSolicitud } from '../services/database';
 import { 
   obtenerSolicitudes,
@@ -18,7 +18,7 @@ interface SolicitudesProps {
   mostrarNotificacion: (mensaje: string, tipo: 'success' | 'error' | 'warning' | 'info') => void;
 }
 
-// Modal de confirmación
+// Modal de confirmación - CON CENTRADO AUTOMÁTICO
 interface ModalConfirmacionProps {
   mostrar: boolean;
   titulo: string;
@@ -46,6 +46,22 @@ const ModalConfirmacion: React.FC<ModalConfirmacionProps> = ({
   comentario = '',
   onComentarioChange
 }) => {
+  // ✨ REF PARA CENTRADO AUTOMÁTICO
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // ✨ EFECTO PARA CENTRADO AUTOMÁTICO
+  useEffect(() => {
+    if (mostrar) {
+      setTimeout(() => {
+        modalRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
+        });
+      }, 0);
+    }
+  }, [mostrar]);
+
   if (!mostrar) return null;
 
   return (
@@ -61,14 +77,17 @@ const ModalConfirmacion: React.FC<ModalConfirmacionProps> = ({
       justifyContent: 'center',
       zIndex: 1000
     }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        maxWidth: '500px',
-        width: '90%',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-      }}>
+      <div 
+        ref={modalRef}
+        style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '1.5rem',
+          maxWidth: '500px',
+          width: '90%',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+        }}
+      >
         <h3 style={{ margin: '0 0 1rem 0', color: '#1f2937' }}>{titulo}</h3>
         <p style={{ margin: '0 0 1rem 0', color: '#6b7280' }}>{mensaje}</p>
         
@@ -750,7 +769,6 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
       </div>
     );
   }
-
   return (
     <div className="solicitudes-container">
       {/* Header */}
@@ -1128,7 +1146,7 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
       />
 
       {/* Modal de confirmación para emitir */}
-      <ModalConfirmacion
+     <ModalConfirmacion
         mostrar={mostrarModalEmitir}
         titulo="Emitir Factura"
         mensaje={`¿Confirmas que quieres emitir la factura para "${solicitudSeleccionada?.cliente.razonSocial}" por ${formatearMontoConSimbolo(solicitudSeleccionada?.monto || 0)}?`}
@@ -1141,7 +1159,6 @@ const Solicitudes: React.FC<SolicitudesProps> = ({ mostrarNotificacion }) => {
         textoCancelar="Cancelar"
         cargando={procesandoId === solicitudSeleccionada?.id}
       />
-
       {/* Modal de confirmación para cancelar */}
       <ModalConfirmacion
         mostrar={mostrarModalCancelar}

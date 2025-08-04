@@ -74,7 +74,7 @@ const FormularioSolicitudMejorado: React.FC<FormularioSolicitudMejoradoProps> = 
       cargarDatosIniciales();
     }
   }, [mostrar]);
-
+  
   const cargarDatosIniciales = async (): Promise<void> => {
     setCargandoData(true);
     try {
@@ -691,7 +691,7 @@ const FormularioSolicitudMejorado: React.FC<FormularioSolicitudMejoradoProps> = 
         )}
 
         <style>{`
-          .header-productos {
+.header-productos {
             display: flex;
             justify-content: space-between;
             align-items: center;

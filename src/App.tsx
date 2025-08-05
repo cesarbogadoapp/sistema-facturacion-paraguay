@@ -28,25 +28,96 @@ function App() {
   const [mostrarAdminDelete, setMostrarAdminDelete] = useState<boolean>(false);
   const { notificaciones, mostrarNotificacion, ocultarNotificacion } = useNotificaciones();
 
-// Listener de autenticación - FORZAR LOGOUT INICIAL
+// Listener de autenticación - CON SESIÓN PERSISTENTE Y CONTROL DE INACTIVIDAD
+  const [ultimaActividad, setUltimaActividad] = useState<number>(Date.now());
+  const [timerInactividad, setTimerInactividad] = useState<NodeJS.Timeout | null>(null);
+  
+  // Configuración de inactividad (2 horas = 7200000ms)
+  const TIEMPO_INACTIVIDAD = 2 * 60 * 60 * 1000; // 2 horas en milisegundos
+
   useEffect(() => {
     console.log('🔄 Iniciando proceso de autenticación...');
     
-    // FORZAR LOGOUT PARA LIMPIAR SESIÓN PERSISTENTE
-    auth.signOut().then(() => {
-      console.log('🧹 Sesión limpiada');
-      
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        console.log('📱 Estado auth:', user ? `Logueado: ${user.email}` : 'Sin login');
-        setUsuario(user);
-        setCargandoAuth(false);
-      });
-
-      return () => unsubscribe();
-    }).catch((error) => {
-      console.error('Error en signOut:', error);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('📱 Estado auth:', user ? `Logueado: ${user.email}` : 'Sin login');
+      setUsuario(user);
       setCargandoAuth(false);
+      
+      if (user) {
+        console.log('✅ Usuario autenticado, iniciando seguimiento de actividad');
+        iniciarSeguimientoActividad();
+      } else {
+        console.log('❌ Usuario no autenticado, limpiando seguimiento');
+        detenerSeguimientoActividad();
+      }
     });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Función para detectar actividad del usuario
+  const detectarActividad = () => {
+    const ahora = Date.now();
+    setUltimaActividad(ahora);
+    
+    // Reiniciar timer de inactividad
+    if (timerInactividad) {
+      clearTimeout(timerInactividad);
+    }
+    
+    const nuevoTimer = setTimeout(() => {
+      console.log('⏰ Sesión expirada por inactividad');
+      cerrarSesionPorInactividad();
+    }, TIEMPO_INACTIVIDAD);
+    
+    setTimerInactividad(nuevoTimer);
+  };
+
+  // Función para iniciar el seguimiento de actividad
+  const iniciarSeguimientoActividad = () => {
+    const eventos = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    detectarActividad();
+    
+    eventos.forEach(evento => {
+      document.addEventListener(evento, detectarActividad, true);
+    });
+    
+    console.log('👀 Seguimiento de actividad iniciado');
+  };
+
+  // Función para detener el seguimiento de actividad
+  const detenerSeguimientoActividad = () => {
+    const eventos = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    eventos.forEach(evento => {
+      document.removeEventListener(evento, detectarActividad, true);
+    });
+    
+    if (timerInactividad) {
+      clearTimeout(timerInactividad);
+      setTimerInactividad(null);
+    }
+    
+    console.log('🛑 Seguimiento de actividad detenido');
+  };
+
+  // Función para cerrar sesión por inactividad
+  const cerrarSesionPorInactividad = async () => {
+    try {
+      await auth.signOut();
+      mostrarNotificacion('Sesión cerrada por inactividad (2 horas)', 'warning');
+      console.log('⏰ Sesión cerrada automáticamente por inactividad');
+    } catch (error) {
+      console.error('Error cerrando sesión por inactividad:', error);
+    }
+  };
+
+  // Limpiar al desmontar el componente
+  useEffect(() => {
+    return () => {
+      detenerSeguimientoActividad();
+    };
   }, []);
 
   // Manejar redimensionamiento de ventana para responsividad
@@ -135,11 +206,14 @@ function App() {
     setSidebarAbierto(!sidebarAbierto);
   };
 
-  // Función para cerrar sesión - NUEVO
+// Función para cerrar sesión - MEJORADA
   const cerrarSesion = async () => {
     try {
+      console.log('🚪 Cerrando sesión manualmente...');
+      detenerSeguimientoActividad();
       await auth.signOut();
       mostrarNotificacion('Sesión cerrada exitosamente', 'success');
+      console.log('✅ Sesión cerrada exitosamente');
     } catch (error) {
       console.error('Error cerrando sesión:', error);
       mostrarNotificacion('Error al cerrar sesión', 'error');

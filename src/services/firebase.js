@@ -1,4 +1,4 @@
-// src/services/firebase.js - ARCHIVO CORREGIDO
+// src/services/firebase.js - CON PERSISTENCIA MEJORADA
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
@@ -22,9 +22,17 @@ export const db = getFirestore(app);
 // Inicializar Firebase Auth
 export const auth = getAuth(app);
 
-// Establecer persistencia local por defecto
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error('Error estableciendo persistencia de auth:', error);
-});
+// Configurar persistencia mejorada
+const configurarPersistencia = async () => {
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    console.log('✅ Persistencia de autenticación configurada correctamente');
+  } catch (error) {
+    console.error('❌ Error configurando persistencia:', error);
+  }
+};
+
+// Ejecutar configuración inmediatamente
+configurarPersistencia();
 
 export default app;
